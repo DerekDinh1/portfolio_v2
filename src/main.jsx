@@ -15,6 +15,10 @@ import resumon from "./assets/mascots/resumon.jpg";
 import buildasaur from "./assets/mascots/buildasaur.jpg";
 import vibeon from "./assets/mascots/vibeon.jpg";
 import titleBg from "./assets/title-bg.jpg";
+import cloudA from "./assets/layers/cloud-a.png";
+import cloudB from "./assets/layers/cloud-b.png";
+import grassLayer from "./assets/layers/grass.png";
+import treeSprite from "./assets/layers/tree.png";
 import { Tv, BookOpen, Clapperboard, Gamepad2, Flag, Mountain, Menu, X } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -264,15 +268,26 @@ function Contact() {
 /* HOME (title screen -> intro dialogue -> starter select)             */
 /* ------------------------------------------------------------------ */
 function TitleScreen({ onStart, exiting }) {
+  const reduce = useReducedMotion();
   return (
     <section
-      className={`title-screen${exiting ? " exiting" : ""}`}
+      className={`title-screen${exiting ? " exiting" : ""}${reduce ? " reduced" : ""}`}
       style={{ backgroundImage: `url(${titleBg})` }}
     >
+      <div className="title-parallax" aria-hidden="true">
+        <img className="title-cloud c1" src={cloudA} alt="" />
+        <img className="title-cloud c2" src={cloudB} alt="" />
+        <img className="title-cloud c3" src={cloudA} alt="" />
+        <img className="title-tree t1" src={treeSprite} alt="" />
+        <img className="title-tree t2" src={treeSprite} alt="" />
+        <img className="title-tree t3" src={treeSprite} alt="" />
+        <img className="title-grass g1" src={grassLayer} alt="" />
+        <img className="title-grass g2" src={grassLayer} alt="" />
+      </div>
       <div className="title-inner">
         <p className="title-region">Colorado Region</p>
         <h1 className="title-name">DEREK DINH</h1>
-        <button className="title-press" onClick={onStart} disabled={exiting}>
+        <button className="title-press btn-pop" onClick={onStart} disabled={exiting}>
           Press Start
         </button>
       </div>
@@ -304,10 +319,13 @@ function StarterSelect() {
       return;
     }
     setRevealed((r) => ({ ...r, [slug]: "opening" }));
-    const t = setTimeout(() => {
+    const t1 = setTimeout(() => {
+      setRevealed((r) => ({ ...r, [slug]: "popping" }));
+    }, 720);
+    const t2 = setTimeout(() => {
       setRevealed((r) => ({ ...r, [slug]: true }));
-    }, 780);
-    timers.current.push(t);
+    }, 1280);
+    timers.current.push(t1, t2);
   };
 
   return (
@@ -318,6 +336,7 @@ function StarterSelect() {
         {STARTERS.map((s) => {
           const state = revealed[s.slug];
           const opening = state === "opening";
+          const popping = state === "popping";
           const open = state === true;
           return (
             <div
@@ -325,8 +344,8 @@ function StarterSelect() {
               className={`starter-card ${
                 open
                   ? `theme-${s.theme} open`
-                  : opening
-                    ? `theme-${s.theme} opening`
+                  : opening || popping
+                    ? `theme-${s.theme} ${opening ? "opening" : "popping"}`
                     : "closed"
               }`}
             >
@@ -339,6 +358,12 @@ function StarterSelect() {
                   <p className="starter-blurb">{s.blurb}</p>
                   <Link to={`/${s.slug}`} className="starter-cta">Choose {s.name} →</Link>
                 </>
+              ) : popping ? (
+                <div className="starter-popout" aria-live="polite">
+                  <span className="pokeball pokeball-fade" aria-hidden="true" />
+                  <span className="pokeball-burst" aria-hidden="true" />
+                  <img className="starter-emerge" src={s.img} alt={s.name} />
+                </div>
               ) : (
                 <button
                   className={`pokeball-btn${opening ? " wobbling" : ""}`}
@@ -367,10 +392,13 @@ function IntroDialogue({ step, setStep, onSkip, onChoose }) {
   const reduce = useReducedMotion();
   const [typed, setTyped] = useState(reduce ? line : "");
   const [done, setDone] = useState(!!reduce);
+  const [cardKey, setCardKey] = useState(0);
   const skipRef = useRef(false);
+  const advancing = useRef(false);
 
   useEffect(() => {
     skipRef.current = false;
+    advancing.current = false;
     if (reduce) {
       setTyped(line);
       setDone(true);
@@ -396,6 +424,23 @@ function IntroDialogue({ step, setStep, onSkip, onChoose }) {
     return () => clearInterval(id);
   }, [line, step, reduce]);
 
+  const advanceStep = () => {
+    if (advancing.current) return;
+    if (last) {
+      onChoose();
+      return;
+    }
+    advancing.current = true;
+    if (reduce) {
+      setStep((s) => s + 1);
+      setCardKey((k) => k + 1);
+      return;
+    }
+    // brief fade handled by AnimatePresence key change
+    setStep((s) => s + 1);
+    setCardKey((k) => k + 1);
+  };
+
   const onNext = () => {
     if (!done) {
       skipRef.current = true;
@@ -403,28 +448,39 @@ function IntroDialogue({ step, setStep, onSkip, onChoose }) {
       setDone(true);
       return;
     }
-    if (last) onChoose();
-    else setStep((s) => s + 1);
+    advanceStep();
   };
 
   return (
     <section className="intro-stage">
-      <div className="dialogue">
-        <span className="nameplate">PROF. DINH</span>
-        <p className="dialogue-text">
-          {typed}
-          {!done ? <span className="type-caret" aria-hidden="true">▌</span> : null}
-        </p>
-        {done ? <span className="cursor" aria-hidden="true">▼</span> : null}
-        <div className="dialogue-controls">
-          <button className="btn btn-ghost" onClick={onSkip}>Skip intro</button>
-          {last && done ? (
-            <button className="btn btn-red" onClick={onChoose}>Choose a starter</button>
-          ) : (
-            <button className="btn btn-dark" onClick={onNext}>Next</button>
-          )}
-        </div>
-      </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={cardKey}
+          className="dialogue"
+          initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+          transition={{ duration: reduce ? 0.15 : 0.28, ease: EASE_OUT }}
+        >
+          <span className="nameplate">PROF. DINH</span>
+          <p className="dialogue-text">
+            {typed}
+            {!done ? <span className="type-caret" aria-hidden="true">▌</span> : null}
+          </p>
+          {done ? <span className="cursor bounce" aria-hidden="true">▼</span> : null}
+          <div className="dialogue-controls">
+            <button className="btn btn-ghost btn-pop" onClick={onSkip}>Skip intro</button>
+            {last && done ? (
+              <button className="btn btn-red btn-pop" onClick={onChoose}>Choose a starter</button>
+            ) : (
+              <button className="btn btn-dark btn-pop" onClick={onNext}>
+                Next
+                <span className="next-arrow bounce" aria-hidden="true">▼</span>
+              </button>
+            )}
+          </div>
+        </motion.div>
+      </AnimatePresence>
       <ol className="progress" aria-hidden="true">
         {INTRO.map((_, i) => (
           <li key={i} className={i <= step ? "done" : ""} />
