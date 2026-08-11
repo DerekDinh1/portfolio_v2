@@ -16,6 +16,7 @@ import resumon from "./assets/mascots/resumon.png";
 import buildasaur from "./assets/mascots/buildasaur.png";
 import vibeon from "./assets/mascots/vibeon.png";
 import titleBg from "./assets/title-bg.jpg";
+import titleBgNight from "./assets/title-bg-night.jpg";
 import { Tv, BookOpen, Clapperboard, Gamepad2, Flag, Mountain, Menu, X } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -357,20 +358,22 @@ function TitleScreen({ onStart }) {
     <section
       className={`title-screen${reduce ? " reduced" : ""}${night ? " is-night" : " is-day"}`}
     >
-      <div
-        className="title-bg"
-        style={{ backgroundImage: `url(${titleBg})` }}
-        aria-hidden="true"
-      />
+      <div className="title-bg-stack" aria-hidden="true">
+        <div
+          className="title-bg title-bg-day"
+          style={{ backgroundImage: `url(${titleBg})` }}
+        />
+        <div
+          className="title-bg title-bg-night"
+          style={{ backgroundImage: `url(${titleBgNight})` }}
+        />
+      </div>
       <div className="title-skyfx" aria-hidden="true">
-        {night ? (
-          <div className="title-stars">
-            {Array.from({ length: 18 }, (_, i) => (
-              <span key={i} className={`title-star n${i + 1}`} />
-            ))}
-          </div>
-        ) : null}
-        <span className={night ? "title-moon" : "title-sun"} />
+        <div className="title-stars">
+          {Array.from({ length: 18 }, (_, i) => (
+            <span key={i} className={`title-star n${i + 1}`} />
+          ))}
+        </div>
       </div>
       <div className="title-inner">
         <p className="title-region">Colorado Region</p>
@@ -411,7 +414,7 @@ function StarterSelect() {
     }, 720);
     const t2 = setTimeout(() => {
       setRevealed((r) => ({ ...r, [slug]: true }));
-    }, 1280);
+    }, 1850);
     timers.current.push(t1, t2);
   };
 
@@ -436,20 +439,37 @@ function StarterSelect() {
                     : "closed"
               }`}
             >
-              {open ? (
+              {open || popping ? (
                 <>
-                  <img className="starter-img" src={s.img} alt={s.name} />
-                  <span className="starter-dex">{s.dex} · {s.type}</span>
-                  <h2 className="starter-name">{s.name}</h2>
-                  <p className="starter-blurb">{s.blurb}</p>
-                  <Link to={`/${s.slug}`} className="starter-cta">Choose {s.name} →</Link>
+                  <div className="starter-mascot-wrap">
+                    {popping ? (
+                      <>
+                        <span className="pokeball pokeball-fade" aria-hidden="true" />
+                        <span className="pokeball-burst" aria-hidden="true" />
+                      </>
+                    ) : null}
+                    <img
+                      className={`starter-img${popping || open ? " emerging" : ""}`}
+                      src={s.img}
+                      alt={s.name}
+                    />
+                  </div>
+                  <div
+                    className={`starter-details${open ? " in" : " pending"}`}
+                    aria-hidden={!open}
+                  >
+                    <span className="starter-dex">{s.dex} · {s.type}</span>
+                    <h2 className="starter-name">{s.name}</h2>
+                    <p className="starter-blurb">{s.blurb}</p>
+                    <Link
+                      to={`/${s.slug}`}
+                      className="starter-cta"
+                      tabIndex={open ? 0 : -1}
+                    >
+                      Choose {s.name} →
+                    </Link>
+                  </div>
                 </>
-              ) : popping ? (
-                <div className="starter-popout" aria-live="polite">
-                  <span className="pokeball pokeball-fade" aria-hidden="true" />
-                  <span className="pokeball-burst" aria-hidden="true" />
-                  <img className="starter-emerge" src={s.img} alt={s.name} />
-                </div>
               ) : (
                 <button
                   className={`pokeball-btn${opening ? " wobbling" : ""}`}

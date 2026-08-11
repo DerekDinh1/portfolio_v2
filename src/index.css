@@ -9,14 +9,39 @@
   --card: #ffffff;
   --muted: #5b6572;
   --line: rgba(24, 28, 34, 0.12);
+  --frame: #181c22;
   --red: #e23b3b;
   --radius: 16px;
   --shadow: 0 14px 34px -16px rgba(24, 28, 34, 0.32);
+  --shadow-lift: 0 22px 44px -18px rgba(24, 28, 34, 0.4);
+  --sprite-shadow: 0 10px 16px rgba(24, 28, 34, 0.22);
+  --scanline: rgba(24, 28, 34, 0.03);
   --display: "Space Grotesk", system-ui, sans-serif;
   --body: "Inter", system-ui, sans-serif;
   --pixel: "Silkscreen", monospace;
   --maxw: 1080px;
   --nav-bg: rgba(250, 247, 240, 0.86);
+
+  /* interactive pairs — night overrides these instead of inverting ink/paper */
+  --red-bg: var(--red);
+  --red-bg-hover: #c22f2f;
+  --red-fg: #ffffff;
+  --red-ink: var(--red);
+  --red-glow: rgba(226, 59, 59, 0.55);
+  --solid-bg: #181c22;
+  --solid-bg-hover: #2a3038;
+  --solid-fg: #faf7f0;
+  --solid-line: transparent;
+  --solid-sheen: transparent;
+  --ghost-line: rgba(24, 28, 34, 0.18);
+  --ghost-hover-bg: rgba(24, 28, 34, 0.05);
+  --ghost-hover-line: #181c22;
+  --pop-shadow: 0 10px 22px -12px rgba(24, 28, 34, 0.45);
+  --plate-bg: #181c22;
+  --plate-fg: #faf7f0;
+  --press-bg: rgba(24, 28, 34, 0.72);
+  --press-line: #ffffff;
+  --focus: var(--accent);
 
   /* default accent = water; pages override via theme classes */
   --accent: #159bb8;
@@ -24,17 +49,47 @@
   --accent-soft: #e4f4f8;
 }
 
+/* Night palette sampled from the pixel-art moonlit meadow:
+   deep navy sky, indigo mountains, moonlit cloud rim, forest-teal grass,
+   and the small gold meadow flowers as the one warm note. */
 html[data-time="night"] {
-  --ink: #e8eef6;
-  --paper: #0f141c;
-  --card: #171e29;
-  --muted: #9aa6b5;
-  --line: rgba(232, 238, 246, 0.12);
-  --shadow: 0 14px 34px -16px rgba(0, 0, 0, 0.55);
-  --nav-bg: rgba(15, 20, 28, 0.88);
-  --accent: #3ec4df;
-  --accent-ink: #d7f4fb;
-  --accent-soft: #1a2f38;
+  --ink: #e9f1fc;
+  --paper: #0b1226;
+  --card: #16223c;
+  --muted: #9db0cc;
+  --line: rgba(150, 186, 232, 0.16);
+  --frame: #8fb4e0;
+  --red: #d6403f;
+  --shadow: 0 18px 40px -20px rgba(3, 7, 20, 0.85);
+  --shadow-lift: 0 24px 48px -20px rgba(2, 6, 18, 0.9), 0 0 26px -14px rgba(126, 200, 255, 0.35);
+  --sprite-shadow: 0 12px 20px rgba(2, 6, 18, 0.6);
+  --scanline: rgba(168, 205, 245, 0.045);
+  --nav-bg: rgba(9, 15, 32, 0.86);
+
+  --red-bg: var(--red);
+  --red-bg-hover: #e6544d;
+  --red-fg: #ffffff;
+  --red-ink: #ff7b6b;
+  --red-glow: rgba(232, 196, 90, 0.35);
+  --solid-bg: #1d2c4a;
+  --solid-bg-hover: #27395e;
+  --solid-fg: #e9f1fc;
+  --solid-line: rgba(143, 180, 224, 0.38);
+  --solid-sheen: rgba(180, 214, 255, 0.16);
+  --ghost-line: rgba(163, 196, 235, 0.34);
+  --ghost-hover-bg: rgba(126, 200, 255, 0.1);
+  --ghost-hover-line: #7ec8ff;
+  --pop-shadow: 0 12px 26px -14px rgba(2, 6, 18, 0.9), 0 0 20px -8px rgba(126, 200, 255, 0.45);
+  --plate-bg: #d8e8fc;
+  --plate-fg: #0b1226;
+  --press-bg: rgba(10, 17, 36, 0.7);
+  --press-line: #cfe3fb;
+  --focus: #a8e0ff;
+
+  --gold: #e8c45a;
+  --accent: #5cc6ec;
+  --accent-ink: #cfeeff;
+  --accent-soft: #12293d;
   color-scheme: dark;
 }
 
@@ -42,9 +97,10 @@ html[data-time="night"] {
 .theme-fire  { --accent: #ef6a34; --accent-ink: #5a2410; --accent-soft: #fdeee6; }
 .theme-grass { --accent: #22a56b; --accent-ink: #0f3f28; --accent-soft: #e7f6ee; }
 
-html[data-time="night"] .theme-water { --accent: #3ec4df; --accent-ink: #d7f4fb; --accent-soft: #1a2f38; }
-html[data-time="night"] .theme-fire  { --accent: #ff8a4c; --accent-ink: #ffe0d0; --accent-soft: #3a2218; }
-html[data-time="night"] .theme-grass { --accent: #45d492; --accent-ink: #d8f8e8; --accent-soft: #163528; }
+/* night accents: moonlit water, ember fire, meadow-teal grass */
+html[data-time="night"] .theme-water { --accent: #5cc6ec; --accent-ink: #cfeeff; --accent-soft: #12293d; }
+html[data-time="night"] .theme-fire  { --accent: #f0a655; --accent-ink: #ffe6c6; --accent-soft: #2e2318; }
+html[data-time="night"] .theme-grass { --accent: #52cfa0; --accent-ink: #d2f6e7; --accent-soft: #10302a; }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -56,12 +112,12 @@ body {
   font-family: var(--body);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
-  transition: background-color 0.35s ease, color 0.35s ease;
+  transition: background-color 0.75s ease, color 0.75s ease;
 }
 
 img { max-width: 100%; display: block; }
 a { color: inherit; }
-:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; border-radius: 4px; }
+:focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; border-radius: 4px; }
 
 /* ---------- buttons ---------- */
 .btn {
@@ -84,20 +140,32 @@ a { color: inherit; }
     transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.18s ease;
 }
-.btn-red { background: var(--red); color: #fff; }
-.btn-red:hover { background: #c22f2f; }
-.btn-dark { background: var(--ink); color: var(--paper); }
-.btn-dark:hover { background: #2a3038; }
-.btn-ghost { background: transparent; color: var(--ink); border-color: var(--line); }
-.btn-ghost:hover { border-color: var(--ink); }
+.btn-red { background: var(--red-bg); color: var(--red-fg); }
+.btn-red:hover { background: var(--red-bg-hover); }
+/* solid secondary: ink pill by day, moonlit indigo pill with a rim-lit top by night */
+.btn-dark {
+  background: var(--solid-bg);
+  color: var(--solid-fg);
+  border-color: var(--solid-line);
+  box-shadow: inset 0 1px 0 var(--solid-sheen);
+}
+.btn-dark:hover { background: var(--solid-bg-hover); }
+.btn-ghost { background: transparent; color: var(--ink); border-color: var(--ghost-line); }
+.btn-ghost:hover { background: var(--ghost-hover-bg); border-color: var(--ghost-hover-line); }
 .btn-pop:hover {
   transform: translateY(-2px) scale(1.06);
-  box-shadow: 0 10px 22px -12px rgba(24, 28, 34, 0.45);
+  box-shadow: var(--pop-shadow);
 }
 .btn-pop:active { transform: translateY(0) scale(0.98); }
+/* keep the rim-light on the solid pill when the pop shadow takes over */
+.btn-dark.btn-pop:hover { box-shadow: var(--pop-shadow), inset 0 1px 0 var(--solid-sheen); }
+/* the meadow's gold flowers are the only warm light at night — reserve it for the brand action */
+html[data-time="night"] .btn-red.btn-pop:hover {
+  box-shadow: var(--pop-shadow), 0 0 22px -10px var(--red-glow);
+}
 .next-arrow {
   display: inline-block;
-  color: var(--red);
+  color: var(--red-ink);
   font-size: 0.72rem;
   line-height: 1;
   margin-left: 2px;
@@ -111,6 +179,7 @@ a { color: inherit; }
   background: var(--nav-bg);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line);
+  transition: background-color 0.75s ease, border-color 0.75s ease;
 }
 .nav-inner {
   max-width: var(--maxw);
@@ -141,7 +210,7 @@ a { color: inherit; }
 .nav-links a { text-decoration: none; color: var(--muted); font-weight: 500; font-size: 0.95rem; }
 .nav-links a:hover { color: var(--ink); }
 .nav-links a.on { color: var(--ink); }
-.nav-links a.btn-red { color: #fff; }
+.nav-links a.btn-red { color: var(--red-fg); }
 .nav-toggle { display: none; background: none; border: none; cursor: pointer; color: var(--ink); padding: 4px; }
 
 /* ---------- day / night toggle (Sun & Moon homage) ---------- */
@@ -149,7 +218,7 @@ a { color: inherit; }
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  border: 2px solid var(--ink);
+  border: 2px solid var(--frame);
   background: var(--card);
   border-radius: 999px;
   padding: 3px 8px 3px 3px;
@@ -166,11 +235,12 @@ a { color: inherit; }
   border-radius: 999px;
   overflow: hidden;
   background: linear-gradient(180deg, #7ec8ff 0%, #b8e4ff 55%, #ffe7a8 100%);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--frame);
   transition: background 0.35s ease;
 }
+/* night sky -> indigo ridgeline -> forest-teal meadow, straight off the art */
 .time-toggle.night .time-track {
-  background: linear-gradient(180deg, #0b1220 0%, #1a2744 60%, #2a1f4d 100%);
+  background: linear-gradient(180deg, #060c1c 0%, #14224a 55%, #1b3a4a 82%, #163528 100%);
 }
 .time-sky { position: absolute; inset: 0; }
 .time-star {
@@ -185,7 +255,9 @@ a { color: inherit; }
 .time-toggle.night .time-star { opacity: 0.9; }
 .time-star.s1 { left: 8px; top: 7px; }
 .time-star.s2 { left: 18px; top: 14px; width: 2px; height: 2px; }
-.time-star.s3 { left: 12px; top: 18px; width: 2px; height: 2px; }
+/* lowest "star" sits in the meadow band — read it as a gold flower */
+.time-star.s3 { left: 12px; top: 19px; width: 2px; height: 2px; }
+.time-toggle.night .time-star.s3 { background: var(--gold); opacity: 0.85; }
 .time-knob {
   position: absolute;
   top: 2px;
@@ -202,8 +274,9 @@ a { color: inherit; }
 }
 .time-toggle.night .time-knob {
   transform: translateX(22px);
-  background: #e8eef8;
-  box-shadow: inset -2px -2px 0 rgba(0,0,0,0.18);
+  background: #dbe8fb;
+  border-color: #0b1226;
+  box-shadow: inset -2px -2px 0 rgba(30, 48, 84, 0.28), 0 0 10px 2px rgba(180, 210, 255, 0.45);
 }
 .time-sun,
 .time-moon {
@@ -245,14 +318,14 @@ a { color: inherit; }
   padding: 40px 22px;
   background:
     radial-gradient(120% 80% at 50% 0%, var(--accent-soft), transparent 60%),
-    repeating-linear-gradient(0deg, transparent 0 26px, rgba(24,28,34,0.03) 26px 27px);
+    repeating-linear-gradient(0deg, transparent 0 26px, var(--scanline) 26px 27px);
 }
 .dialogue {
   position: relative;
   max-width: 640px;
   width: 100%;
   background: var(--card);
-  border: 2px solid var(--ink);
+  border: 2px solid var(--frame);
   border-radius: 18px;
   padding: 30px 26px 24px;
   box-shadow: var(--shadow);
@@ -261,8 +334,8 @@ a { color: inherit; }
   position: absolute;
   top: -18px;
   left: 22px;
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--plate-bg);
+  color: var(--plate-fg);
   font-family: var(--pixel);
   font-size: 0.95rem;
   letter-spacing: 0.1em;
@@ -273,7 +346,7 @@ a { color: inherit; }
 .type-caret {
   display: inline-block;
   margin-left: 1px;
-  color: var(--red);
+  color: var(--red-ink);
   font-size: 0.85em;
   line-height: 1;
   animation: caret-blink 0.7s steps(1, end) infinite;
@@ -283,7 +356,7 @@ a { color: inherit; }
   position: absolute;
   right: 18px;
   bottom: 18px;
-  color: var(--red);
+  color: var(--red-ink);
   font-size: 0.95rem;
 }
 .cursor.bounce,
@@ -301,7 +374,7 @@ a { color: inherit; }
 .dialogue-controls { display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px; flex-wrap: wrap; }
 .progress { list-style: none; display: flex; gap: 8px; }
 .progress li { width: 26px; height: 6px; border-radius: 999px; background: var(--line); }
-.progress li.done { background: var(--red); }
+.progress li.done { background: var(--red-ink); }
 
 /* ---------- home: starter select ---------- */
 .select-stage { max-width: var(--maxw); margin: 0 auto; padding: 8vh 22px 12vh; text-align: center; }
@@ -320,33 +393,53 @@ a { color: inherit; }
   box-shadow: var(--shadow);
   transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
-.starter-card:hover { transform: translateY(-6px); box-shadow: 0 22px 44px -18px rgba(24,28,34,0.4); }
+.starter-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lift); }
+.starter-mascot-wrap {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 168px;
+  margin: 0 auto 10px;
+}
+.starter-mascot-wrap .pokeball {
+  position: absolute;
+  width: 96px;
+  height: 96px;
+  animation: ball-sink 0.55s ease-in forwards;
+}
+.starter-mascot-wrap .pokeball-burst {
+  top: 50%;
+  left: 50%;
+  animation-delay: 0s;
+}
 .starter-img {
   width: 168px;
   height: 168px;
   object-fit: contain;
-  margin: 0 auto 10px;
   position: relative;
-  animation: starter-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
-  filter: drop-shadow(0 10px 16px rgba(24, 28, 34, 0.22));
+  z-index: 2;
+  filter: drop-shadow(var(--sprite-shadow));
 }
-.starter-card.open .starter-dex,
-.starter-card.open .starter-name,
-.starter-card.open .starter-blurb,
-.starter-card.open .starter-cta {
-  animation: starter-fade-up 0.4s ease both;
+.starter-img.emerging {
+  animation: mascot-emerge 1.05s cubic-bezier(0.25, 0.8, 0.25, 1) both;
 }
-.starter-card.open .starter-name { animation-delay: 0.05s; }
-.starter-card.open .starter-blurb { animation-delay: 0.1s; }
-.starter-card.open .starter-cta { animation-delay: 0.15s; }
+.starter-details.pending {
+  opacity: 0;
+  pointer-events: none;
+}
+.starter-details.in .starter-dex,
+.starter-details.in .starter-name,
+.starter-details.in .starter-blurb,
+.starter-details.in .starter-cta {
+  animation: starter-fade-up 0.5s ease both;
+}
+.starter-details.in .starter-name { animation-delay: 0.08s; }
+.starter-details.in .starter-blurb { animation-delay: 0.14s; }
+.starter-details.in .starter-cta { animation-delay: 0.2s; }
 .starter-dex { font-family: var(--pixel); font-size: 0.58rem; letter-spacing: 0.08em; color: var(--accent); }
 .starter-name { font-family: var(--display); font-weight: 700; font-size: 1.5rem; margin: 6px 0 6px; color: var(--accent-ink); }
 .starter-blurb { color: var(--muted); font-size: 0.95rem; min-height: 2.8em; }
 .starter-cta { display: inline-block; margin-top: 14px; font-weight: 600; color: var(--accent); }
-@keyframes starter-pop {
-  from { opacity: 0; transform: scale(0.72); }
-  to { opacity: 1; transform: scale(1); }
-}
 @keyframes starter-fade-up {
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
@@ -361,15 +454,23 @@ a { color: inherit; }
   text-align: center;
   overflow: hidden;
 }
+.title-bg-stack {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
 .title-bg {
   position: absolute;
   inset: 0;
   background-size: cover;
   background-position: center;
   image-rendering: pixelated;
-  transition: filter 0.45s ease;
-  z-index: 0;
+  transition: opacity 0.9s ease;
 }
+.title-bg-day { opacity: 1; }
+.title-bg-night { opacity: 0; }
+.title-screen.is-night .title-bg-day { opacity: 0; }
+.title-screen.is-night .title-bg-night { opacity: 1; }
 .title-skyfx {
   position: absolute;
   inset: 0;
@@ -382,60 +483,31 @@ a { color: inherit; }
   inset: 0;
   background: linear-gradient(180deg, rgba(10, 20, 40, 0.10), rgba(10, 20, 40, 0.42));
   z-index: 1;
-  transition: background 0.45s ease;
+  transition: background 0.9s ease, opacity 0.9s ease;
   pointer-events: none;
 }
-.title-screen.is-night .title-bg {
-  filter: saturate(0.7) brightness(0.5) hue-rotate(12deg);
-}
+/* night uses the painted night plate, so it only needs a legibility scrim */
 .title-screen.is-night::before {
   background:
-    linear-gradient(180deg, rgba(8, 14, 40, 0.4), rgba(6, 10, 28, 0.58)),
-    radial-gradient(55% 40% at 78% 16%, rgba(180, 200, 255, 0.14), transparent 60%);
+    linear-gradient(180deg, rgba(6, 11, 28, 0.18), rgba(4, 8, 22, 0.46)),
+    radial-gradient(50% 36% at 82% 14%, rgba(190, 214, 255, 0.16), transparent 62%);
 }
-.title-sun {
+.title-stars {
   position: absolute;
-  left: 12%;
-  top: 20%;
-  width: 66px;
-  height: 66px;
-  border-radius: 50%;
+  inset: 0;
   z-index: 1;
-  background: radial-gradient(circle at 50% 50%, #fff6cf 0 30%, #ffe08a 46%, rgba(255, 200, 90, 0.35) 62%, transparent 74%);
-  mix-blend-mode: screen;
+  opacity: 0;
+  transition: opacity 0.9s ease;
 }
-.title-moon {
-  position: absolute;
-  right: 15%;
-  top: 12%;
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  z-index: 1;
-  background:
-    radial-gradient(circle at 34% 32%, #ffffff 0 40%, #eef2fb 55%, #ccd6ea 78%, #b7c3dd 100%);
-  box-shadow:
-    0 0 22px 6px rgba(190, 208, 255, 0.4),
-    inset -6px -5px 0 rgba(120, 135, 170, 0.35);
-}
-.title-moon::before,
-.title-moon::after {
-  content: "";
-  position: absolute;
-  border-radius: 50%;
-  background: rgba(150, 165, 200, 0.35);
-}
-.title-moon::before { width: 10px; height: 10px; top: 30%; left: 52%; }
-.title-moon::after { width: 6px; height: 6px; top: 58%; left: 32%; }
-.title-stars { position: absolute; inset: 0; z-index: 1; }
+.title-screen.is-night .title-stars { opacity: 1; }
 .title-star {
   position: absolute;
   width: 3px;
   height: 3px;
-  background: #fff;
+  background: #eaf2ff;
   border-radius: 1px;
-  opacity: 0.85;
-  box-shadow: 0 0 6px rgba(255,255,255,0.8);
+  opacity: 0.7;
+  box-shadow: 0 0 6px rgba(200, 224, 255, 0.75);
 }
 .title-star.n1 { left: 8%; top: 12%; }
 .title-star.n2 { left: 18%; top: 7%; width: 2px; height: 2px; opacity: 0.7; }
@@ -463,6 +535,11 @@ a { color: inherit; }
   color: #fff;
   text-shadow: 0 2px 0 rgba(0, 0, 0, 0.5);
   margin-bottom: 12px;
+  transition: color 0.8s ease, text-shadow 0.8s ease;
+}
+.title-screen.is-night .title-region {
+  color: #dbe8fb;
+  text-shadow: 0 2px 0 rgba(4, 9, 24, 0.65);
 }
 .title-name {
   font-family: var(--display);
@@ -472,6 +549,11 @@ a { color: inherit; }
   line-height: 1;
   color: #fff;
   text-shadow: 0 4px 0 rgba(0, 0, 0, 0.35), 0 0 26px rgba(0, 0, 0, 0.45);
+  transition: color 0.8s ease, text-shadow 0.8s ease;
+}
+.title-screen.is-night .title-name {
+  color: #f2f7ff;
+  text-shadow: 0 4px 0 rgba(4, 9, 24, 0.55), 0 0 30px rgba(126, 200, 255, 0.35);
 }
 .title-press {
   margin-top: 30px;
@@ -479,26 +561,28 @@ a { color: inherit; }
   font-size: 0.9rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: #fff;
-  background: rgba(24, 28, 34, 0.72);
-  border: 2px solid #fff;
+  color: var(--press-line);
+  background: var(--press-bg);
+  border: 2px solid var(--press-line);
   border-radius: 8px;
   padding: 14px 28px;
   cursor: pointer;
   animation: press-blink 1s steps(1, end) infinite;
   transition:
-    background-color 0.15s ease,
-    border-color 0.15s ease,
+    background-color 0.75s ease,
+    border-color 0.75s ease,
+    color 0.75s ease,
     transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1),
     box-shadow 0.18s ease;
 }
 .title-press:hover {
-  background: var(--red);
-  border-color: var(--red);
+  background: var(--red-bg);
+  border-color: var(--red-bg);
+  color: var(--red-fg);
   animation: none;
   opacity: 1;
   transform: translateY(-3px) scale(1.08);
-  box-shadow: 0 12px 28px -10px rgba(226, 59, 59, 0.55);
+  box-shadow: 0 12px 28px -10px var(--red-glow);
 }
 .title-press:active { transform: translateY(0) scale(0.98); }
 .title-press:disabled { cursor: default; opacity: 0.85; animation: none; }
@@ -509,8 +593,7 @@ a { color: inherit; }
 
 /* ---------- poké ball (starter reveal) ---------- */
 .starter-card.closed,
-.starter-card.opening,
-.starter-card.popping {
+.starter-card.opening {
   border-top-color: var(--line);
   display: grid;
   place-items: center;
@@ -519,6 +602,10 @@ a { color: inherit; }
 .starter-card.opening,
 .starter-card.popping {
   border-top-color: var(--accent);
+}
+.starter-card.popping {
+  /* match open layout so the mascot never jumps when details fade in */
+  min-height: 320px;
 }
 .pokeball-btn {
   position: relative;
@@ -558,6 +645,19 @@ a { color: inherit; }
   background: #fff;
   border: 6px solid #181c22;
 }
+/* the ball keeps its iconic colours, just lit by moonlight instead of daylight */
+html[data-time="night"] .pokeball {
+  background: linear-gradient(
+    #d6403f 0 calc(50% - 6px),
+    #0a1020 calc(50% - 6px) calc(50% + 6px),
+    #dbe8fb calc(50% + 6px) 100%
+  );
+  border-color: #0a1020;
+}
+html[data-time="night"] .pokeball::after {
+  background: #dbe8fb;
+  border-color: #0a1020;
+}
 .pokeball-btn:hover .pokeball {
   animation: pokeball-alive 0.55s ease-in-out infinite;
 }
@@ -582,32 +682,6 @@ a { color: inherit; }
   font-size: 0.95rem;
   letter-spacing: 0.06em;
   color: var(--ink);
-}
-.starter-popout {
-  position: relative;
-  width: 100%;
-  min-height: 260px;
-  display: grid;
-  place-items: center;
-}
-.starter-popout .pokeball {
-  position: absolute;
-  width: 96px;
-  height: 96px;
-  animation: ball-sink 0.55s ease-in forwards;
-}
-.starter-popout .pokeball-burst {
-  top: 50%;
-  animation-delay: 0s;
-}
-.starter-emerge {
-  width: 168px;
-  height: 168px;
-  object-fit: contain;
-  position: relative;
-  z-index: 2;
-  animation: mascot-popout 0.55s cubic-bezier(0.22, 1.4, 0.36, 1) both;
-  filter: drop-shadow(0 10px 18px rgba(24, 28, 34, 0.28));
 }
 @keyframes pokeball-alive {
   0%, 100% { transform: rotate(0deg) translateY(0); }
@@ -634,10 +708,11 @@ a { color: inherit; }
   0% { opacity: 1; transform: scale(1); }
   100% { opacity: 0; transform: scale(0.55) translateY(18px); }
 }
-@keyframes mascot-popout {
-  0% { opacity: 0; transform: scale(0.2) translateY(36px); }
-  55% { opacity: 1; transform: scale(1.12) translateY(-8px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+/* Rise out of the ball, then drift down into resting place — almost no scale pop */
+@keyframes mascot-emerge {
+  0% { opacity: 0; transform: translateY(48px) scale(0.92); }
+  45% { opacity: 1; transform: translateY(-22px) scale(1); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 /* ---------- page hero ---------- */
@@ -662,7 +737,7 @@ a { color: inherit; }
   object-fit: contain;
   position: relative;
   animation: hero-float 4.2s ease-in-out infinite;
-  filter: drop-shadow(0 14px 22px rgba(24, 28, 34, 0.22));
+  filter: drop-shadow(var(--sprite-shadow));
 }
 @keyframes hero-float {
   0%, 100% { transform: translateY(0); }
@@ -746,6 +821,15 @@ a { color: inherit; }
 .notfound h1 { font-family: var(--display); font-size: 2rem; margin-bottom: 10px; }
 .notfound p { color: var(--muted); margin-bottom: 22px; }
 
+/* ---------- night: moonlight falls from above, so surfaces get a top rim ---------- */
+html[data-time="night"] .dialogue,
+html[data-time="night"] .starter-card,
+html[data-time="night"] .proj-card,
+html[data-time="night"] .stat,
+html[data-time="night"] .badge {
+  background-image: linear-gradient(180deg, rgba(180, 214, 255, 0.06), transparent 46%);
+}
+
 /* ---------- responsive ---------- */
 @media (max-width: 820px) {
   .starter-grid { grid-template-columns: 1fr; max-width: 380px; margin-inline: auto; }
@@ -793,11 +877,11 @@ a { color: inherit; }
   .pokeball-btn.wobbling .pokeball,
   .pokeball-burst,
   .starter-img,
-  .starter-emerge,
-  .starter-card.open .starter-dex,
-  .starter-card.open .starter-name,
-  .starter-card.open .starter-blurb,
-  .starter-card.open .starter-cta,
+  .starter-img.emerging,
+  .starter-details.in .starter-dex,
+  .starter-details.in .starter-name,
+  .starter-details.in .starter-blurb,
+  .starter-details.in .starter-cta,
   .hero-art img,
   .hero-mascot {
     animation: none !important;
