@@ -7,18 +7,15 @@ import {
   Link,
   NavLink,
   useLocation,
+  useNavigate,
 } from "react-router-dom";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import "./index.css";
 
-import resumon from "./assets/mascots/resumon.jpg";
-import buildasaur from "./assets/mascots/buildasaur.jpg";
-import vibeon from "./assets/mascots/vibeon.jpg";
+import resumon from "./assets/mascots/resumon.png";
+import buildasaur from "./assets/mascots/buildasaur.png";
+import vibeon from "./assets/mascots/vibeon.png";
 import titleBg from "./assets/title-bg.jpg";
-import cloudA from "./assets/layers/cloud-a.png";
-import cloudB from "./assets/layers/cloud-b.png";
-import grassLayer from "./assets/layers/grass.png";
-import treeSprite from "./assets/layers/tree.png";
 import { Tv, BookOpen, Clapperboard, Gamepad2, Flag, Mountain, Menu, X } from "lucide-react";
 
 /* ------------------------------------------------------------------ */
@@ -266,11 +263,17 @@ function Reveal({ children, className = "", as = "div", delay = 0, ...rest }) {
 /* ------------------------------------------------------------------ */
 function Nav() {
   const [open, setOpen] = useState(false);
+  const navigate = useNavigate();
   const close = () => setOpen(false);
+  const goTitle = (e) => {
+    e.preventDefault();
+    close();
+    navigate("/", { state: { screen: "title", t: Date.now() } });
+  };
   return (
     <header className="nav">
       <div className="nav-inner">
-        <Link to="/" className="wordmark" onClick={close}>DEREK DINH</Link>
+        <Link to="/" className="wordmark" onClick={goTitle}>DEREK DINH</Link>
         <div className="nav-actions">
           <DayNightToggle />
           <button
@@ -313,7 +316,6 @@ function PageHero({ starter }) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: reduce ? 0 : 0.55, delay: reduce ? 0 : 0.08, ease: EASE_OUT }}
       >
-        <div className="hero-orb" />
         <img className="hero-mascot" src={starter.img} alt={`${starter.name}, the ${starter.type}-type starter`} />
       </motion.div>
     </section>
@@ -321,6 +323,7 @@ function PageHero({ starter }) {
 }
 
 function Contact() {
+  const navigate = useNavigate();
   return (
     <footer className="contact">
       <h2>Get in touch</h2>
@@ -329,7 +332,16 @@ function Contact() {
         <a className="btn btn-red" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <a className="btn btn-ghost" href={CONTACT.github} target="_blank" rel="noopener noreferrer">GitHub</a>
       </div>
-      <Link to="/" className="back-lab">← Back to the lab</Link>
+      <Link
+        to="/"
+        className="back-lab"
+        onClick={(e) => {
+          e.preventDefault();
+          navigate("/", { state: { screen: "title", t: Date.now() } });
+        }}
+      >
+        ← Back to the lab
+      </Link>
     </footer>
   );
 }
@@ -337,20 +349,20 @@ function Contact() {
 /* ------------------------------------------------------------------ */
 /* HOME (title screen -> intro dialogue -> starter select)             */
 /* ------------------------------------------------------------------ */
-function TitleScreen({ onStart, exiting }) {
+function TitleScreen({ onStart }) {
   const reduce = useReducedMotion();
   const { mode } = useTime();
   const night = mode === "night";
   return (
     <section
-      className={`title-screen${exiting ? " exiting" : ""}${reduce ? " reduced" : ""}${night ? " is-night" : " is-day"}`}
+      className={`title-screen${reduce ? " reduced" : ""}${night ? " is-night" : " is-day"}`}
     >
       <div
         className="title-bg"
         style={{ backgroundImage: `url(${titleBg})` }}
         aria-hidden="true"
       />
-      <div className="title-parallax" aria-hidden="true">
+      <div className="title-skyfx" aria-hidden="true">
         {night ? (
           <div className="title-stars">
             {Array.from({ length: 18 }, (_, i) => (
@@ -358,24 +370,15 @@ function TitleScreen({ onStart, exiting }) {
             ))}
           </div>
         ) : null}
-        {night ? <span className="title-moon" /> : <span className="title-sun" />}
-        <img className="title-cloud c1" src={cloudA} alt="" />
-        <img className="title-cloud c2" src={cloudB} alt="" />
-        <img className="title-cloud c3" src={cloudA} alt="" />
-        <img className="title-tree t1" src={treeSprite} alt="" />
-        <img className="title-tree t2" src={treeSprite} alt="" />
-        <img className="title-tree t3" src={treeSprite} alt="" />
-        <img className="title-grass g1" src={grassLayer} alt="" />
-        <img className="title-grass g2" src={grassLayer} alt="" />
+        <span className={night ? "title-moon" : "title-sun"} />
       </div>
       <div className="title-inner">
         <p className="title-region">Colorado Region</p>
         <h1 className="title-name">DEREK DINH</h1>
-        <button className="title-press btn-pop" onClick={onStart} disabled={exiting}>
+        <button className="title-press btn-pop" onClick={onStart}>
           Press Start
         </button>
       </div>
-      {exiting ? <div className="title-flash" aria-hidden="true" /> : null}
     </section>
   );
 }
@@ -435,7 +438,6 @@ function StarterSelect() {
             >
               {open ? (
                 <>
-                  <div className="starter-orb" />
                   <img className="starter-img" src={s.img} alt={s.name} />
                   <span className="starter-dex">{s.dex} · {s.type}</span>
                   <h2 className="starter-name">{s.name}</h2>
@@ -559,7 +561,6 @@ function IntroDialogue({ step, setStep, onSkip, onChoose }) {
             ) : (
               <button className="btn btn-dark btn-pop" onClick={onNext}>
                 Next
-                <span className="next-arrow bounce" aria-hidden="true">▼</span>
               </button>
             )}
           </div>
@@ -577,18 +578,14 @@ function IntroDialogue({ step, setStep, onSkip, onChoose }) {
 function Home() {
   const [scene, setScene] = useState("title"); // title | intro | select
   const [step, setStep] = useState(0);
-  const [exitingTitle, setExitingTitle] = useState(false);
   const reduce = useReducedMotion();
+  const location = useLocation();
 
-  const startFromTitle = () => {
-    if (exitingTitle) return;
-    if (reduce) {
-      setScene("intro");
-      return;
-    }
-    setExitingTitle(true);
-    window.setTimeout(() => setScene("intro"), 520);
-  };
+  useEffect(() => {
+    if (location.pathname !== "/") return;
+    setScene("title");
+    setStep(0);
+  }, [location.pathname, location.state?.t]);
 
   return (
     <main className="home">
@@ -597,18 +594,18 @@ function Home() {
           <motion.div
             key="title"
             initial={false}
-            exit={reduce ? { opacity: 0 } : { opacity: 0 }}
-            transition={{ duration: reduce ? 0.15 : 0.35 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduce ? 0.12 : 0.55, ease: "easeInOut" }}
           >
-            <TitleScreen onStart={startFromTitle} exiting={exitingTitle} />
+            <TitleScreen onStart={() => setScene("intro")} />
           </motion.div>
         ) : scene === "intro" ? (
           <motion.div
             key="intro"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
-            transition={{ duration: reduce ? 0.2 : 0.4, ease: EASE_OUT }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: reduce ? 0.12 : 0.55, ease: "easeInOut" }}
           >
             <IntroDialogue
               step={step}
@@ -620,9 +617,9 @@ function Home() {
         ) : (
           <motion.div
             key="select"
-            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: reduce ? 0.2 : 0.45, ease: EASE_OUT }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: reduce ? 0.12 : 0.45, ease: "easeInOut" }}
           >
             <StarterSelect />
           </motion.div>
