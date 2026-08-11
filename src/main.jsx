@@ -1,4 +1,4 @@
-import { StrictMode, useState } from "react";
+import { StrictMode, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   BrowserRouter,
@@ -6,7 +6,9 @@ import {
   Route,
   Link,
   NavLink,
+  useLocation,
 } from "react-router-dom";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import "./index.css";
 
 import resumon from "./assets/mascots/resumon.jpg";
@@ -160,6 +162,35 @@ const PERSONAL = {
 };
 
 /* ------------------------------------------------------------------ */
+/* MOTION HELPERS                                                       */
+/* ------------------------------------------------------------------ */
+const EASE_OUT = [0.22, 1, 0.36, 1];
+
+const MOTION_TAGS = {
+  div: motion.div,
+  section: motion.section,
+  article: motion.article,
+  li: motion.li,
+};
+
+function Reveal({ children, className = "", as = "div", delay = 0, ...rest }) {
+  const reduce = useReducedMotion();
+  const Tag = MOTION_TAGS[as] || motion.div;
+  return (
+    <Tag
+      className={className}
+      initial={reduce ? false : { opacity: 0, y: 18 }}
+      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.2 }}
+      transition={{ duration: reduce ? 0 : 0.45, delay: reduce ? 0 : delay, ease: EASE_OUT }}
+      {...rest}
+    >
+      {children}
+    </Tag>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* SHARED COMPONENTS                                                    */
 /* ------------------------------------------------------------------ */
 function Nav() {
@@ -189,17 +220,28 @@ function Nav() {
 }
 
 function PageHero({ starter }) {
+  const reduce = useReducedMotion();
   return (
     <section className={`hero theme-${starter.theme}`}>
-      <div className="hero-copy">
+      <motion.div
+        className="hero-copy"
+        initial={reduce ? false : { opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: reduce ? 0 : 0.5, ease: EASE_OUT }}
+      >
         <span className="dex">{starter.dex} · {starter.type} type</span>
         <h1 className="hero-name">{starter.name}</h1>
         <p className="hero-tagline">{starter.tagline}</p>
-      </div>
-      <div className="hero-art">
+      </motion.div>
+      <motion.div
+        className="hero-art"
+        initial={reduce ? false : { opacity: 0, scale: 0.92 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: reduce ? 0 : 0.55, delay: reduce ? 0 : 0.08, ease: EASE_OUT }}
+      >
         <div className="hero-orb" />
-        <img src={starter.img} alt={`${starter.name}, the ${starter.type}-type starter`} />
-      </div>
+        <img className="hero-mascot" src={starter.img} alt={`${starter.name}, the ${starter.type}-type starter`} />
+      </motion.div>
     </section>
   );
 }
@@ -221,24 +263,52 @@ function Contact() {
 /* ------------------------------------------------------------------ */
 /* HOME (title screen -> intro dialogue -> starter select)             */
 /* ------------------------------------------------------------------ */
-function TitleScreen({ onStart }) {
+function TitleScreen({ onStart, exiting }) {
   return (
     <section
-      className="title-screen"
+      className={`title-screen${exiting ? " exiting" : ""}`}
       style={{ backgroundImage: `url(${titleBg})` }}
     >
       <div className="title-inner">
         <p className="title-region">Colorado Region</p>
         <h1 className="title-name">DEREK DINH</h1>
-        <button className="title-press" onClick={onStart}>Press Start</button>
+        <button className="title-press" onClick={onStart} disabled={exiting}>
+          Press Start
+        </button>
       </div>
+      {exiting ? <div className="title-flash" aria-hidden="true" /> : null}
     </section>
   );
 }
 
 function StarterSelect() {
   const [revealed, setRevealed] = useState({});
-  const reveal = (slug) => setRevealed((r) => ({ ...r, [slug]: true }));
+  const reduce = useReducedMotion();
+  const timers = useRef([]);
+
+  useEffect(() => {
+    STARTERS.forEach((s) => {
+      const img = new Image();
+      img.src = s.img;
+    });
+    const pending = timers.current;
+    return () => {
+      pending.forEach(clearTimeout);
+    };
+  }, []);
+
+  const reveal = (slug) => {
+    if (revealed[slug]) return;
+    if (reduce) {
+      setRevealed((r) => ({ ...r, [slug]: true }));
+      return;
+    }
+    setRevealed((r) => ({ ...r, [slug]: "opening" }));
+    const t = setTimeout(() => {
+      setRevealed((r) => ({ ...r, [slug]: true }));
+    }, 780);
+    timers.current.push(t);
+  };
 
   return (
     <section className="select-stage">
@@ -246,9 +316,20 @@ function StarterSelect() {
       <p className="select-sub">Tap a Poké Ball to see who's inside. You can catch all three.</p>
       <div className="starter-grid">
         {STARTERS.map((s) => {
-          const open = revealed[s.slug];
+          const state = revealed[s.slug];
+          const opening = state === "opening";
+          const open = state === true;
           return (
-            <div key={s.slug} className={`starter-card ${open ? `theme-${s.theme} open` : "closed"}`}>
+            <div
+              key={s.slug}
+              className={`starter-card ${
+                open
+                  ? `theme-${s.theme} open`
+                  : opening
+                    ? `theme-${s.theme} opening`
+                    : "closed"
+              }`}
+            >
               {open ? (
                 <>
                   <div className="starter-orb" />
@@ -259,9 +340,17 @@ function StarterSelect() {
                   <Link to={`/${s.slug}`} className="starter-cta">Choose {s.name} →</Link>
                 </>
               ) : (
-                <button className="pokeball-btn" onClick={() => reveal(s.slug)} aria-label={`Open the ${s.slug} Poké Ball`}>
+                <button
+                  className={`pokeball-btn${opening ? " wobbling" : ""}`}
+                  onClick={() => reveal(s.slug)}
+                  disabled={opening}
+                  aria-label={`Open the ${s.slug} Poké Ball`}
+                >
                   <span className="pokeball" aria-hidden="true" />
-                  <span className="pokeball-hint">{s.slug.charAt(0).toUpperCase() + s.slug.slice(1)}</span>
+                  {opening ? <span className="pokeball-burst" aria-hidden="true" /> : null}
+                  <span className="pokeball-hint">
+                    {s.slug.charAt(0).toUpperCase() + s.slug.slice(1)}
+                  </span>
                 </button>
               )}
             </div>
@@ -272,45 +361,133 @@ function StarterSelect() {
   );
 }
 
+function IntroDialogue({ step, setStep, onSkip, onChoose }) {
+  const line = INTRO[step];
+  const last = step >= INTRO.length - 1;
+  const reduce = useReducedMotion();
+  const [typed, setTyped] = useState(reduce ? line : "");
+  const [done, setDone] = useState(!!reduce);
+  const skipRef = useRef(false);
+
+  useEffect(() => {
+    skipRef.current = false;
+    if (reduce) {
+      setTyped(line);
+      setDone(true);
+      return undefined;
+    }
+    setTyped("");
+    setDone(false);
+    let i = 0;
+    const id = setInterval(() => {
+      if (skipRef.current) {
+        clearInterval(id);
+        setTyped(line);
+        setDone(true);
+        return;
+      }
+      i += 1;
+      setTyped(line.slice(0, i));
+      if (i >= line.length) {
+        clearInterval(id);
+        setDone(true);
+      }
+    }, 28);
+    return () => clearInterval(id);
+  }, [line, step, reduce]);
+
+  const onNext = () => {
+    if (!done) {
+      skipRef.current = true;
+      setTyped(line);
+      setDone(true);
+      return;
+    }
+    if (last) onChoose();
+    else setStep((s) => s + 1);
+  };
+
+  return (
+    <section className="intro-stage">
+      <div className="dialogue">
+        <span className="nameplate">PROF. DINH</span>
+        <p className="dialogue-text">
+          {typed}
+          {!done ? <span className="type-caret" aria-hidden="true">▌</span> : null}
+        </p>
+        {done ? <span className="cursor" aria-hidden="true">▼</span> : null}
+        <div className="dialogue-controls">
+          <button className="btn btn-ghost" onClick={onSkip}>Skip intro</button>
+          {last && done ? (
+            <button className="btn btn-red" onClick={onChoose}>Choose a starter</button>
+          ) : (
+            <button className="btn btn-dark" onClick={onNext}>Next</button>
+          )}
+        </div>
+      </div>
+      <ol className="progress" aria-hidden="true">
+        {INTRO.map((_, i) => (
+          <li key={i} className={i <= step ? "done" : ""} />
+        ))}
+      </ol>
+    </section>
+  );
+}
+
 function Home() {
   const [scene, setScene] = useState("title"); // title | intro | select
   const [step, setStep] = useState(0);
-  const last = step >= INTRO.length - 1;
+  const [exitingTitle, setExitingTitle] = useState(false);
+  const reduce = useReducedMotion();
 
-  if (scene === "title") {
-    return (
-      <main className="home">
-        <TitleScreen onStart={() => setScene("intro")} />
-      </main>
-    );
-  }
+  const startFromTitle = () => {
+    if (exitingTitle) return;
+    if (reduce) {
+      setScene("intro");
+      return;
+    }
+    setExitingTitle(true);
+    window.setTimeout(() => setScene("intro"), 520);
+  };
 
   return (
     <main className="home">
-      {scene === "intro" ? (
-        <section className="intro-stage">
-          <div className="dialogue">
-            <span className="nameplate">PROF. DINH</span>
-            <p className="dialogue-text">{INTRO[step]}</p>
-            <span className="cursor" aria-hidden="true">▼</span>
-            <div className="dialogue-controls">
-              <button className="btn btn-ghost" onClick={() => setScene("select")}>Skip intro</button>
-              {last ? (
-                <button className="btn btn-red" onClick={() => setScene("select")}>Choose a starter</button>
-              ) : (
-                <button className="btn btn-dark" onClick={() => setStep((s) => s + 1)}>Next</button>
-              )}
-            </div>
-          </div>
-          <ol className="progress" aria-hidden="true">
-            {INTRO.map((_, i) => (
-              <li key={i} className={i <= step ? "done" : ""} />
-            ))}
-          </ol>
-        </section>
-      ) : (
-        <StarterSelect />
-      )}
+      <AnimatePresence mode="wait">
+        {scene === "title" ? (
+          <motion.div
+            key="title"
+            initial={false}
+            exit={reduce ? { opacity: 0 } : { opacity: 0 }}
+            transition={{ duration: reduce ? 0.15 : 0.35 }}
+          >
+            <TitleScreen onStart={startFromTitle} exiting={exitingTitle} />
+          </motion.div>
+        ) : scene === "intro" ? (
+          <motion.div
+            key="intro"
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+            transition={{ duration: reduce ? 0.2 : 0.4, ease: EASE_OUT }}
+          >
+            <IntroDialogue
+              step={step}
+              setStep={setStep}
+              onSkip={() => setScene("select")}
+              onChoose={() => setScene("select")}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="select"
+            initial={reduce ? { opacity: 0 } : { opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: reduce ? 0.2 : 0.45, ease: EASE_OUT }}
+          >
+            <StarterSelect />
+          </motion.div>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
@@ -325,28 +502,28 @@ function Professional() {
       <PageHero starter={starter} />
       <div className="wrap">
         <section className="stats">
-          {STATS.map((s) => (
-            <div className="stat" key={s.l}>
+          {STATS.map((s, i) => (
+            <Reveal className="stat" key={s.l} delay={i * 0.06}>
               <div className="stat-n">{s.n}</div>
               <div className="stat-l">{s.l}</div>
-            </div>
+            </Reveal>
           ))}
         </section>
 
-        <section className="block">
+        <Reveal className="block" as="section">
           <h2 className="block-h">What I'm focused on</h2>
           <ul className="notable">
             {FOCUS.map((t, i) => (
               <li key={i}>{t}</li>
             ))}
           </ul>
-        </section>
+        </Reveal>
 
-        <section className="block">
+        <Reveal className="block" as="section">
           <h2 className="block-h">Experience</h2>
           <ul className="exp">
-            {EXPERIENCE.map((e) => (
-              <li className="exp-row" key={e.org}>
+            {EXPERIENCE.map((e, i) => (
+              <Reveal className="exp-row" as="li" key={e.org} delay={i * 0.05}>
                 <div className="exp-head">
                   <div>
                     <div className="exp-org">{e.org}</div>
@@ -355,16 +532,16 @@ function Professional() {
                   <span className="exp-when">{e.when}</span>
                 </div>
                 <ul className="exp-points">
-                  {e.points.map((p, i) => (
-                    <li key={i}>{p}</li>
+                  {e.points.map((p, j) => (
+                    <li key={j}>{p}</li>
                   ))}
                 </ul>
-              </li>
+              </Reveal>
             ))}
           </ul>
-        </section>
+        </Reveal>
 
-        <section className="block">
+        <Reveal className="block" as="section">
           <h2 className="block-h">Skills</h2>
           <div className="skills">
             {SKILLS.map((g) => (
@@ -378,9 +555,9 @@ function Professional() {
               </div>
             ))}
           </div>
-        </section>
+        </Reveal>
 
-        <section className="block">
+        <Reveal className="block" as="section">
           <h2 className="block-h">Education</h2>
           <div className="edu">
             <div className="edu-head">
@@ -390,7 +567,7 @@ function Professional() {
             <div className="edu-degree">{EDUCATION.degree}</div>
             <div className="edu-minors">{EDUCATION.minors}</div>
           </div>
-        </section>
+        </Reveal>
       </div>
       <Contact />
     </main>
@@ -406,12 +583,12 @@ function Projects() {
     <main className="page theme-fire">
       <PageHero starter={starter} />
       <div className="wrap">
-        <section className="block">
+        <Reveal className="block" as="section">
           <h2 className="block-h">Caught apps</h2>
           <p className="block-sub">Things I build after hours. Grab one off the shelf.</p>
           <div className="proj-grid">
-            {PROJECTS.map((p) => (
-              <article className="proj-card" key={p.name}>
+            {PROJECTS.map((p, i) => (
+              <Reveal className="proj-card" as="article" key={p.name} delay={i * 0.06}>
                 <h3 className="proj-name">{p.name}</h3>
                 <p className="proj-tag">{p.tagline}</p>
                 <ul className="chips">
@@ -422,10 +599,10 @@ function Projects() {
                 <div className="proj-links">
                   <a href={p.url} target="_blank" rel="noopener noreferrer">Visit →</a>
                 </div>
-              </article>
+              </Reveal>
             ))}
           </div>
-        </section>
+        </Reveal>
       </div>
       <Contact />
     </main>
@@ -441,30 +618,30 @@ function Personal() {
     <main className="page theme-grass">
       <PageHero starter={starter} />
       <div className="wrap">
-        <section className="block">
+        <Reveal className="block" as="section">
           <p className="fun-intro">{PERSONAL.intro}</p>
           <div className="badges">
-            {PERSONAL.badges.map((b) => {
+            {PERSONAL.badges.map((b, i) => {
               const Icon = b.Icon;
               return (
-                <div className="badge" key={b.h}>
+                <Reveal className="badge" key={b.h} delay={i * 0.05}>
                   <span className="badge-icon" aria-hidden="true"><Icon size={28} strokeWidth={2} /></span>
                   <h3>{b.h}</h3>
                   <p>{b.p}</p>
-                </div>
+                </Reveal>
               );
             })}
           </div>
-        </section>
+        </Reveal>
 
-        <section className="block">
+        <Reveal className="block" as="section">
           <h2 className="block-h">A few true things</h2>
           <ul className="notable">
             {PERSONAL.facts.map((f, i) => (
               <li key={i}>{f}</li>
             ))}
           </ul>
-        </section>
+        </Reveal>
       </div>
       <Contact />
     </main>
@@ -486,17 +663,36 @@ function NotFound() {
 /* ------------------------------------------------------------------ */
 /* APP                                                                 */
 /* ------------------------------------------------------------------ */
+function AnimatedRoutes() {
+  const location = useLocation();
+  const reduce = useReducedMotion();
+  return (
+    <AnimatePresence mode="wait">
+      <motion.div
+        key={location.pathname}
+        className="route-frame"
+        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
+        transition={{ duration: reduce ? 0.15 : 0.32, ease: EASE_OUT }}
+      >
+        <Routes location={location}>
+          <Route path="/" element={<Home />} />
+          <Route path="/professional" element={<Professional />} />
+          <Route path="/projects" element={<Projects />} />
+          <Route path="/personal" element={<Personal />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </motion.div>
+    </AnimatePresence>
+  );
+}
+
 function App() {
   return (
     <div className="app">
       <Nav />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/professional" element={<Professional />} />
-        <Route path="/projects" element={<Projects />} />
-        <Route path="/personal" element={<Personal />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <AnimatedRoutes />
     </div>
   );
 }
