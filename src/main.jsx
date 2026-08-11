@@ -17,7 +17,117 @@ import buildasaur from "./assets/mascots/buildasaur.png";
 import vibeon from "./assets/mascots/vibeon.png";
 import titleBg from "./assets/title-bg.jpg";
 import titleBgNight from "./assets/title-bg-night.jpg";
+import titleBgDayVid from "./assets/title-bg-day.mp4";
+import titleBgNightVid from "./assets/title-bg-night.mp4";
 import { Tv, BookOpen, Clapperboard, Gamepad2, Flag, Mountain, Menu, X } from "lucide-react";
+
+const TITLE_AMBIENCE_RATE = 0.45; // 55% slower than full speed
+const TITLE_AMBIENCE_CROSSFADE_WALL_S = 1.75;
+
+/**
+ * Seamless title ambience:
+ * - Source clips use the original still as BOTH first and last frame (returns to start).
+ * - ffmpeg self-crossfade + dual video buffers hide any residual seam.
+ * - Play at 1× so motion stays smooth (no frame ticking from ultra-slow playback).
+ */
+function SeamlessAmbienceVideo({ src, poster, className, active }) {
+  const aRef = useRef(null);
+  const bRef = useRef(null);
+  const [front, setFront] = useState("a");
+  const fadingRef = useRef(false);
+  const frontRef = useRef(front);
+  frontRef.current = front;
+
+  useEffect(() => {
+    [aRef.current, bRef.current].forEach((v) => {
+      if (!v) return;
+      v.playbackRate = TITLE_AMBIENCE_RATE;
+      v.defaultPlaybackRate = TITLE_AMBIENCE_RATE;
+    });
+  }, [src]);
+
+  useEffect(() => {
+    const a = aRef.current;
+    const b = bRef.current;
+    if (!a || !b) return undefined;
+
+    const applyRate = (v) => {
+      if (v.playbackRate !== TITLE_AMBIENCE_RATE) v.playbackRate = TITLE_AMBIENCE_RATE;
+      v.defaultPlaybackRate = TITLE_AMBIENCE_RATE;
+    };
+    const mediaFade = TITLE_AMBIENCE_CROSSFADE_WALL_S * TITLE_AMBIENCE_RATE;
+
+    if (!active) {
+      a.pause();
+      b.pause();
+      fadingRef.current = false;
+      return undefined;
+    }
+
+    const frontEl = frontRef.current === "a" ? a : b;
+    const backEl = frontRef.current === "a" ? b : a;
+    applyRate(frontEl);
+    applyRate(backEl);
+    backEl.pause();
+    const play = frontEl.play();
+    if (play && typeof play.catch === "function") play.catch(() => {});
+
+    const onTimeUpdate = () => {
+      if (fadingRef.current) return;
+      const lead = frontRef.current === "a" ? a : b;
+      const next = frontRef.current === "a" ? b : a;
+      if (!Number.isFinite(lead.duration) || lead.duration < mediaFade + 0.35) {
+        return;
+      }
+      if (lead.duration - lead.currentTime > mediaFade) return;
+
+      fadingRef.current = true;
+      applyRate(next);
+      try {
+        next.currentTime = 0;
+      } catch {
+        /* ignore */
+      }
+      const nextPlay = next.play();
+      if (nextPlay && typeof nextPlay.catch === "function") nextPlay.catch(() => {});
+      setFront((f) => (f === "a" ? "b" : "a"));
+      window.setTimeout(() => {
+        lead.pause();
+        fadingRef.current = false;
+      }, TITLE_AMBIENCE_CROSSFADE_WALL_S * 1000 + 80);
+    };
+
+    a.addEventListener("timeupdate", onTimeUpdate);
+    b.addEventListener("timeupdate", onTimeUpdate);
+    return () => {
+      a.removeEventListener("timeupdate", onTimeUpdate);
+      b.removeEventListener("timeupdate", onTimeUpdate);
+    };
+  }, [active, src]);
+
+  return (
+    <div className={`title-bg title-ambience ${className}`}>
+      <video
+        ref={aRef}
+        className={`title-ambience-layer${front === "a" ? " is-front" : ""}`}
+        src={src}
+        poster={poster}
+        muted
+        playsInline
+        preload={active ? "auto" : "metadata"}
+      />
+      <video
+        ref={bRef}
+        className={`title-ambience-layer${front === "b" ? " is-front" : ""}`}
+        src={src}
+        poster={poster}
+        muted
+        playsInline
+        preload={active ? "auto" : "metadata"}
+      />
+    </div>
+  );
+}
 
 /* ------------------------------------------------------------------ */
 /* CONTENT (real facts, sourced from Derek's resume)                   */
@@ -354,19 +464,36 @@ function TitleScreen({ onStart }) {
   const reduce = useReducedMotion();
   const { mode } = useTime();
   const night = mode === "night";
+
   return (
     <section
       className={`title-screen${reduce ? " reduced" : ""}${night ? " is-night" : " is-day"}`}
     >
       <div className="title-bg-stack" aria-hidden="true">
         <div
-          className="title-bg title-bg-day"
+          className="title-bg title-bg-still title-bg-day"
           style={{ backgroundImage: `url(${titleBg})` }}
         />
         <div
-          className="title-bg title-bg-night"
+          className="title-bg title-bg-still title-bg-night"
           style={{ backgroundImage: `url(${titleBgNight})` }}
         />
+        {!reduce ? (
+          <>
+            <SeamlessAmbienceVideo
+              className="title-bg-day"
+              src={titleBgDayVid}
+              poster={titleBg}
+              active={!night}
+            />
+            <SeamlessAmbienceVideo
+              className="title-bg-night"
+              src={titleBgNightVid}
+              poster={titleBgNight}
+              active={night}
+            />
+          </>
+        ) : null}
       </div>
       <div className="title-skyfx" aria-hidden="true">
         <div className="title-stars">
