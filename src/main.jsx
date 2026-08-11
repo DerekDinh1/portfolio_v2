@@ -1,4 +1,4 @@
-import { StrictMode, useEffect, useRef, useState } from "react";
+import { StrictMode, createContext, useContext, useEffect, useRef, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   BrowserRouter,
@@ -166,6 +166,73 @@ const PERSONAL = {
 };
 
 /* ------------------------------------------------------------------ */
+/* DAY / NIGHT                                                          */
+/* ------------------------------------------------------------------ */
+const TimeContext = createContext({ mode: "day", toggle: () => {} });
+
+function readStoredTime() {
+  try {
+    const v = localStorage.getItem("dd-time");
+    if (v === "day" || v === "night") return v;
+  } catch {
+    /* ignore */
+  }
+  return "day";
+}
+
+function TimeProvider({ children }) {
+  const [mode, setMode] = useState(readStoredTime);
+
+  useEffect(() => {
+    document.documentElement.dataset.time = mode;
+    try {
+      localStorage.setItem("dd-time", mode);
+    } catch {
+      /* ignore */
+    }
+  }, [mode]);
+
+  const toggle = () => setMode((m) => (m === "day" ? "night" : "day"));
+  return (
+    <TimeContext.Provider value={{ mode, toggle }}>
+      {children}
+    </TimeContext.Provider>
+  );
+}
+
+function useTime() {
+  return useContext(TimeContext);
+}
+
+function DayNightToggle() {
+  const { mode, toggle } = useTime();
+  const night = mode === "night";
+  return (
+    <button
+      type="button"
+      className={`time-toggle${night ? " night" : " day"}`}
+      onClick={toggle}
+      aria-label={night ? "Switch to day mode" : "Switch to night mode"}
+      aria-pressed={night}
+      title={night ? "Night — tap for day" : "Day — tap for night"}
+    >
+      <span className="time-track" aria-hidden="true">
+        <span className="time-sky">
+          <span className="time-star s1" />
+          <span className="time-star s2" />
+          <span className="time-star s3" />
+        </span>
+        <span className="time-knob">
+          <span className="time-sun" />
+          <span className="time-moon" />
+        </span>
+      </span>
+      <span className="time-label">{night ? "NIGHT" : "DAY"}</span>
+    </button>
+  );
+}
+
+/* ------------------------------------------------------------------ */
 /* MOTION HELPERS                                                       */
 /* ------------------------------------------------------------------ */
 const EASE_OUT = [0.22, 1, 0.36, 1];
@@ -204,14 +271,17 @@ function Nav() {
     <header className="nav">
       <div className="nav-inner">
         <Link to="/" className="wordmark" onClick={close}>DEREK DINH</Link>
-        <button
-          className="nav-toggle"
-          aria-label={open ? "Close menu" : "Open menu"}
-          aria-expanded={open}
-          onClick={() => setOpen((o) => !o)}
-        >
-          {open ? <X size={22} /> : <Menu size={22} />}
-        </button>
+        <div className="nav-actions">
+          <DayNightToggle />
+          <button
+            className="nav-toggle"
+            aria-label={open ? "Close menu" : "Open menu"}
+            aria-expanded={open}
+            onClick={() => setOpen((o) => !o)}
+          >
+            {open ? <X size={22} /> : <Menu size={22} />}
+          </button>
+        </div>
         <nav className={`nav-links ${open ? "open" : ""}`} aria-label="Primary">
           <NavLink to="/professional" onClick={close} className={({ isActive }) => (isActive ? "on" : "")}>Professional</NavLink>
           <NavLink to="/projects" onClick={close} className={({ isActive }) => (isActive ? "on" : "")}>Projects</NavLink>
@@ -269,12 +339,26 @@ function Contact() {
 /* ------------------------------------------------------------------ */
 function TitleScreen({ onStart, exiting }) {
   const reduce = useReducedMotion();
+  const { mode } = useTime();
+  const night = mode === "night";
   return (
     <section
-      className={`title-screen${exiting ? " exiting" : ""}${reduce ? " reduced" : ""}`}
-      style={{ backgroundImage: `url(${titleBg})` }}
+      className={`title-screen${exiting ? " exiting" : ""}${reduce ? " reduced" : ""}${night ? " is-night" : " is-day"}`}
     >
+      <div
+        className="title-bg"
+        style={{ backgroundImage: `url(${titleBg})` }}
+        aria-hidden="true"
+      />
       <div className="title-parallax" aria-hidden="true">
+        {night ? (
+          <div className="title-stars">
+            {Array.from({ length: 18 }, (_, i) => (
+              <span key={i} className={`title-star n${i + 1}`} />
+            ))}
+          </div>
+        ) : null}
+        {night ? <span className="title-moon" /> : <span className="title-sun" />}
         <img className="title-cloud c1" src={cloudA} alt="" />
         <img className="title-cloud c2" src={cloudB} alt="" />
         <img className="title-cloud c3" src={cloudA} alt="" />
@@ -746,10 +830,12 @@ function AnimatedRoutes() {
 
 function App() {
   return (
-    <div className="app">
-      <Nav />
-      <AnimatedRoutes />
-    </div>
+    <TimeProvider>
+      <div className="app">
+        <Nav />
+        <AnimatedRoutes />
+      </div>
+    </TimeProvider>
   );
 }
 
