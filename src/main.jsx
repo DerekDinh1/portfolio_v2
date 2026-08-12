@@ -212,9 +212,11 @@ const EXPERIENCE = [
     role: "Senior IT Support Engineer",
     when: "Feb 2025 to Jul 2026",
     points: [
-      "Built a Console AI agent into our Slack help channel that handles about 79% of requests through automated resolutions and escalations.",
-      "Stood up agentic AI models across departments using Console, ChatGPT, and Claude.",
-      "Ran technology integration and migration during an acquisition, coordinating across teams to keep things running.",
+      "Architected a Console AI agent into our Slack help channel that freed over 79% of human resources through automated resolutions and escalations.",
+      "Created, reviewed, and established agentic AI models across department platforms and company channels using Console, ChatGPT, and Claude.",
+      "Revamped multiple SOPs to increase team efficiency, which unlocked further automation from those frameworks.",
+      "Served as a senior escalation point for technical issues, partnering with stakeholders to keep resolution timely and service continuous.",
+      "Managed technology integration and migration during acquisition efforts, coordinating across teams to minimize disruption.",
     ],
   },
   {
@@ -222,9 +224,10 @@ const EXPERIENCE = [
     role: "Senior IT Support Specialist",
     when: "Jun 2023 to Feb 2025",
     points: [
-      "Delivered IT initiatives tied to company goals and hit 100% of targeted deliverables.",
-      "Put security and operational practices in place through risk assessments, maintenance, and end-user education.",
-      "Mentored junior support staff and pushed knowledge sharing across the team.",
+      "Developed and executed IT initiatives aligned with organizational objectives, achieving 100% completion of targeted deliverables.",
+      "Implemented security and operational best practices through risk assessments, system maintenance, and end-user education.",
+      "Mentored junior support staff and promoted knowledge sharing across the team.",
+      "Performed system analysis, troubleshooting, and upgrades to improve performance, stability, and security.",
     ],
   },
   {
@@ -232,9 +235,10 @@ const EXPERIENCE = [
     role: "IT Support Engineer",
     when: "Apr 2022 to May 2023",
     points: [
-      "Cut ticket resolution times by 60% and raised documentation accuracy by 70%.",
-      "Designed automated Okta workflows that improved efficiency and user experience by 50%.",
-      "Managed 300+ Apple endpoints with Jamf Pro at a 95% uptime rate.",
+      "Diagnosed, investigated, and resolved hardware, software, and network issues, reducing ticket resolution times by 60%.",
+      "Maintained and enhanced technical documentation and knowledge base content, increasing documentation accuracy by 70%.",
+      "Designed and implemented automated Okta workflows and system enhancements, improving operational efficiency and user experience by 50%.",
+      "Supported and maintained Apple hardware across 300+ endpoints with Jamf Pro, hitting 95% uptime and streamlining device enrollment by 40%.",
     ],
   },
   {
@@ -242,8 +246,20 @@ const EXPERIENCE = [
     role: "IT Support Admin",
     when: "Apr 2021 to Apr 2022",
     points: [
-      "Led an A3/lean process-improvement team that made end-user onboarding 90% better.",
-      "Built Zendesk and Slack workflows that improved response times by 30%.",
+      "Led a process-improvement team for end-user onboarding and training with A3/lean methodology, resulting in a 90% better onboarding experience.",
+      "Developed Zendesk and Slack workflows for help requests, improving response times by 30%.",
+      "Promoted documentation maintenance for new systems, increasing knowledge management by 40%.",
+    ],
+  },
+  {
+    org: "FORM MarketX (formerly GoSpotCheck)",
+    role: "IT Desktop Support Specialist",
+    when: "Dec 2019 to Mar 2021",
+    points: [
+      "Developed, implemented, and maintained an asset-tracking system in Asana to improve hardware accountability.",
+      "Improved employee onboarding, security practices, and equipment maintenance as the company scaled.",
+      "Planned internal technical operations and communicated across teams so new hires were set up for success.",
+      "Resolved user issues quickly while finding creative fixes for unique problems across teams and executives.",
     ],
   },
 ];
@@ -398,25 +414,32 @@ function Nav() {
   };
   return (
     <header className="nav">
-      <div className="nav-inner">
-        <Link to="/" className="wordmark" onClick={goTitle}>DEREK DINH</Link>
-        <div className="nav-actions">
-          <DayNightToggle />
-          <button
-            className="nav-toggle"
-            aria-label={open ? "Close menu" : "Open menu"}
-            aria-expanded={open}
-            onClick={() => setOpen((o) => !o)}
-          >
-            {open ? <X size={22} /> : <Menu size={22} />}
-          </button>
+      <div className="nav-frame">
+        <div className="nav-plate nav-plate-head">
+          <Link to="/" className="wordmark" onClick={goTitle}>DEREK DINH</Link>
         </div>
-        <nav className={`nav-links ${open ? "open" : ""}`} aria-label="Primary">
-          <NavLink to="/professional" onClick={close} className={({ isActive }) => (isActive ? "on" : "")}>Professional</NavLink>
-          <NavLink to="/projects" onClick={close} className={({ isActive }) => (isActive ? "on" : "")}>Projects</NavLink>
-          <NavLink to="/personal" onClick={close} className={({ isActive }) => (isActive ? "on" : "")}>Personal</NavLink>
-          <a className="btn btn-red" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer" onClick={close}>Get in touch</a>
-        </nav>
+        <div className="nav-plate nav-plate-body">
+          <div className="nav-lead">
+            <button
+              className="nav-toggle"
+              aria-label={open ? "Close menu" : "Open menu"}
+              aria-expanded={open}
+              onClick={() => setOpen((o) => !o)}
+            >
+              {open ? <X size={20} /> : <Menu size={20} />}
+            </button>
+            <DayNightToggle />
+          </div>
+          <nav className={`nav-links ${open ? "open" : ""}`} aria-label="Primary">
+            <NavLink to="/professional" onClick={close} className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}>Professional</NavLink>
+            <NavLink to="/projects" onClick={close} className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}>Projects</NavLink>
+            <NavLink to="/personal" onClick={close} className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}>Personal</NavLink>
+            <a className="btn btn-red nav-cta nav-cta-mobile" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer" onClick={close}>Get in touch</a>
+          </nav>
+          <div className="nav-end">
+            <a className="btn btn-red nav-cta" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">Get in touch</a>
+          </div>
+        </div>
       </div>
     </header>
   );
