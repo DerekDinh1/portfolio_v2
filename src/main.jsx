@@ -15,6 +15,12 @@ import "./index.css";
 import resumon from "./assets/mascots/resumon.png";
 import buildasaur from "./assets/mascots/buildasaur.png";
 import vibeon from "./assets/mascots/vibeon.png";
+import resumonHi from "./assets/mascots/resumon-hi.webm";
+import resumonIdle from "./assets/mascots/resumon-idle.webm";
+import buildasaurHi from "./assets/mascots/buildasaur-hi.webm";
+import buildasaurIdle from "./assets/mascots/buildasaur-idle.webm";
+import vibeonHi from "./assets/mascots/vibeon-hi.webm";
+import vibeonIdle from "./assets/mascots/vibeon-idle.webm";
 import titleBg from "./assets/title-bg.jpg";
 import titleBgNight from "./assets/title-bg-night.jpg";
 import titleBgDayVid from "./assets/title-bg-day.mp4";
@@ -23,6 +29,9 @@ import { Tv, BookOpen, Clapperboard, Gamepad2, Flag, Mountain, Menu, X } from "l
 
 const TITLE_AMBIENCE_RATE = 0.45; // 55% slower than full speed
 const TITLE_AMBIENCE_CROSSFADE_WALL_S = 1.75;
+const CAN_PLAY_WEBM =
+  typeof document !== "undefined" &&
+  document.createElement("video").canPlayType('video/webm; codecs="vp9"') !== "";
 
 /**
  * Seamless title ambience:
@@ -145,6 +154,8 @@ const STARTERS = [
     type: "Water",
     theme: "water",
     img: resumon,
+    hi: resumonHi,
+    idle: resumonIdle,
     tagline: "9+ years across IT support, security, and systems. Lately, automation and agentic AI.",
     blurb: "Experience, automation, and integrations.",
   },
@@ -155,6 +166,8 @@ const STARTERS = [
     type: "Fire",
     theme: "fire",
     img: buildasaur,
+    hi: buildasaurHi,
+    idle: buildasaurIdle,
     tagline: "Small apps I build after hours.",
     blurb: "Projects, straight from GitHub.",
   },
@@ -165,6 +178,8 @@ const STARTERS = [
     type: "Grass",
     theme: "grass",
     img: vibeon,
+    hi: vibeonHi,
+    idle: vibeonIdle,
     tagline: "Anime, golf, games, and Colorado trails.",
     blurb: "The person behind the tickets.",
   },
@@ -407,6 +422,32 @@ function Nav() {
   );
 }
 
+function MascotSprite({ starter, loop, className, alt }) {
+  const reduce = useReducedMotion();
+  const [failed, setFailed] = useState(false);
+  const src = loop === "hi" ? starter.hi : starter.idle;
+  if (reduce || !src || failed || !CAN_PLAY_WEBM) {
+    return <img className={className} src={starter.img} alt={alt} />;
+  }
+  return (
+    <video
+      className={className}
+      src={src}
+      poster={starter.img}
+      autoPlay
+      loop
+      muted
+      playsInline
+      aria-label={alt}
+      onLoadedMetadata={(e) => {
+        e.currentTarget.playbackRate = 1.25;
+        e.currentTarget.defaultPlaybackRate = 1.25;
+      }}
+      onError={() => setFailed(true)}
+    />
+  );
+}
+
 function PageHero({ starter }) {
   const reduce = useReducedMotion();
   return (
@@ -427,7 +468,12 @@ function PageHero({ starter }) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: reduce ? 0 : 0.55, delay: reduce ? 0 : 0.08, ease: EASE_OUT }}
       >
-        <img className="hero-mascot" src={starter.img} alt={`${starter.name}, the ${starter.type}-type starter`} />
+        <MascotSprite
+          starter={starter}
+          loop="idle"
+          className="hero-mascot"
+          alt={`${starter.name}, the ${starter.type}-type starter`}
+        />
       </motion.div>
     </section>
   );
@@ -575,9 +621,10 @@ function StarterSelect() {
                         <span className="pokeball-burst" aria-hidden="true" />
                       </>
                     ) : null}
-                    <img
+                    <MascotSprite
+                      starter={s}
+                      loop="hi"
                       className={`starter-img${popping || open ? " emerging" : ""}`}
-                      src={s.img}
                       alt={s.name}
                     />
                   </div>

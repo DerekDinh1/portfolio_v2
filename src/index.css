@@ -419,6 +419,7 @@ html[data-time="night"] .btn-red.btn-pop:hover {
   position: relative;
   z-index: 2;
   filter: drop-shadow(var(--sprite-shadow));
+  background: transparent;
 }
 .starter-img.emerging {
   animation: mascot-emerge 1.05s cubic-bezier(0.25, 0.8, 0.25, 1) both;
@@ -787,6 +788,10 @@ html[data-time="night"] .pokeball::after {
   position: relative;
   animation: hero-float 4.2s ease-in-out infinite;
   filter: drop-shadow(var(--sprite-shadow));
+  background: transparent;
+}
+video.hero-mascot {
+  animation: none;
 }
 @keyframes hero-float {
   0%, 100% { transform: translateY(0); }
