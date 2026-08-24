@@ -1,16 +1,75 @@
-# React + Vite
+# 🎮 Derek Dinh — Portfolio
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+[![Live site](https://img.shields.io/badge/live-derekdinh.com-e23b3b?style=flat-square)](https://derekdinh.com)
+[![Built with Vite](https://img.shields.io/badge/built%20with-Vite-646CFF?style=flat-square&logo=vite&logoColor=white)](https://vite.dev)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=black)](https://react.dev)
 
-Currently, two official plugins are available:
+> *A personal portfolio dressed as a Pokémon-style adventure — choose a starter, explore the paths.*
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## 🌟 Highlights
 
-## React Compiler
+- **Choose a starter** — Resumon, Buildasaur, or Vibeon each lead into a different side of the story
+- **Day / night mode** — a calm toggle that shifts the whole scene
+- **Motion with restraint** — title ambience, mascot loops, and route transitions that respect `prefers-reduced-motion`
+- **Mobile-first** — framed navbar, hamburger menu, and layouts that hold up at 375px
+- **Static & fast** — Vite + React, deployed to GitHub Pages at [derekdinh.com](https://derekdinh.com)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## ℹ️ Overview
 
-## Expanding the Oxlint configuration
+This site is Derek Dinh’s personal portfolio: an IT operator’s résumé, projects, and personal interests wrapped in a light Pokémon homage (original mascots and UI — no Nintendo assets).
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+You land on a title screen, step through a short intro, then pick a Poké Ball. Each starter opens a themed page:
+
+| Starter | Path | Theme |
+| --- | --- | --- |
+| **Resumon** | `/professional` | Experience, automation, systems |
+| **Buildasaur** | `/projects` | Side projects from GitHub |
+| **Vibeon** | `/personal` | Anime, golf, games, Colorado trails |
+
+Built with **Vite**, **React 19**, **react-router-dom**, and **Motion**, with styles and tokens living in `src/index.css`.
+
+### ✍️ Author
+
+I'm [Derek Dinh](https://github.com/DerekDinh1) — IT support and systems, lately automation and agentic AI. Find me on [LinkedIn](https://www.linkedin.com/in/dinhderek) or the live site at [derekdinh.com](https://derekdinh.com).
+
+## 🚀 Usage
+
+Clone, install, and run the Vite app:
+
+```bash
+npm install
+npm run dev
+```
+
+Open the printed local URL (usually `http://localhost:5173`), press **Start**, and pick a starter.
+
+Useful scripts:
+
+| Command | What it does |
+| --- | --- |
+| `npm run dev` | Local development server |
+| `npm run build` | Production build to `dist/` |
+| `npm run preview` | Serve the production build locally |
+| `npm run lint` | Run Oxlint |
+
+## ⬇️ Installation
+
+**Requirements:** Node.js 20+ (or a current LTS) and npm.
+
+```bash
+git clone https://github.com/DerekDinh1/portfolio_v2.git
+cd portfolio_v2
+npm install
+```
+
+No other runtime services are required — this is a static front-end.
+
+## 💭 Feedback and Contributing
+
+Spotted a bug, have a motion idea, or want to suggest a feature? Open an [issue](https://github.com/DerekDinh1/portfolio_v2/issues) on this repo.
+
+PRs are welcome for polish, accessibility, and performance. Keep the Pokémon homage original (no Nintendo sprites, logos, or audio), and prefer small, focused changes.
+
+## 📖 Further reading
+
+README structure inspired by [banesullivan/README](https://github.com/banesullivan/README) — *How to write a good README*.
