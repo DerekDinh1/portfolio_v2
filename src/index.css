@@ -943,7 +943,7 @@ video.hero-mascot {
 .notable li::before { content: "▸"; position: absolute; left: 0; color: var(--accent); }
 
 /* skills */
-.skills { display: grid; grid-template-columns: repeat(3, 1fr); gap: 26px; }
+.skills { display: grid; grid-template-columns: repeat(2, 1fr); gap: 26px; }
 .skill-group h3 { font-size: 1rem; margin-bottom: 12px; }
 .chips { list-style: none; display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { background: var(--accent-soft); color: var(--accent-ink); border-radius: 999px; padding: 5px 12px; font-size: 0.82rem; font-weight: 500; }

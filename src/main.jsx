@@ -195,14 +195,14 @@ const INTRO = [
 
 const STATS = [
   { n: "9+ yrs", l: "in IT support, security, and systems" },
-  { n: "79%", l: "of Slack support requests handled by an AI agent I built" },
+  { n: "70%", l: "of ticket resolutions automated via agentic AI" },
   { n: "300+", l: "Apple endpoints managed at 95% uptime" },
   { n: "60%", l: "faster ticket resolution" },
 ];
 
 const FOCUS = [
   "IT security, process, and systems management across fast-moving teams.",
-  "Automation and agentic AI: building AI agents and workflows that take repetitive work off people's plates.",
+  "Automation and AI implementation through agentic AI development.",
   "Growth mentorship for junior team members.",
 ];
 
@@ -212,9 +212,8 @@ const EXPERIENCE = [
     role: "Senior IT Support Engineer",
     when: "Feb 2025 to Jul 2026",
     points: [
-      "Architected a Console AI agent into our Slack help channel that freed over 79% of human resources through automated resolutions and escalations.",
-      "Created, reviewed, and established agentic AI models across department platforms and company channels using Console, ChatGPT, and Claude.",
-      "Revamped multiple SOPs to increase team efficiency, which unlocked further automation from those frameworks.",
+      "Architected multiple agentic AI models across department platforms and company channels using Console, ChatGPT, and Claude, resulting in over 70% automated ticket resolutions.",
+      "Revamped multiple SOPs to increase team procedure efficiency, which unlocked further automation from those frameworks.",
       "Served as a senior escalation point for technical issues, partnering with stakeholders to keep resolution timely and service continuous.",
       "Managed technology integration and migration during acquisition efforts, coordinating across teams to minimize disruption.",
     ],
@@ -265,9 +264,63 @@ const EXPERIENCE = [
 ];
 
 const SKILLS = [
-  { h: "Support & Systems", items: ["Microsoft 365", "Google Workspace", "Entra ID / Azure AD", "Active Directory", "Okta", "Intune", "Jamf", "Kandji", "Windows & Mac endpoints", "VPN admin"] },
-  { h: "Service Management", items: ["ServiceNow", "Zendesk", "FreshService", "Atlassian", "Incident management", "Root cause analysis", "SLA management", "SOC 2 compliance"] },
-  { h: "AI, Automation & Integrations", items: ["Agentic AI", "Console AI", "Claude", "OpenAI (ChatGPT)", "Okta Workflows", "Zapier", "n8n", "API integrations", "Python", "JavaScript"] },
+  {
+    h: "AI, Automation & Integrations",
+    items: [
+      "Console AI",
+      "Agentic AI development",
+      "OpenAI (ChatGPT)",
+      "Claude",
+      "Zapier",
+      "n8n",
+      "API integrations",
+      "Okta Workflows",
+      "Python",
+      "JavaScript",
+      "bash",
+    ],
+  },
+  {
+    h: "Endpoint & Device Management",
+    items: [
+      "Jamf Pro",
+      "Kandji",
+      "Intune",
+      "Workspace One",
+      "macOS & Windows fleet management",
+      "Device enrollment & imaging",
+      "Asset / inventory tracking (Asana)",
+      "VPN administration",
+    ],
+  },
+  {
+    h: "Identity & Access Management",
+    items: [
+      "Okta",
+      "Azure AD / Entra ID",
+      "Active Directory",
+      "SSO / SAML",
+      "User lifecycle & provisioning",
+      "Google Workspace",
+      "Microsoft 365",
+    ],
+  },
+  {
+    h: "IT Service Management & Compliance",
+    items: [
+      "ServiceNow",
+      "Zendesk",
+      "FreshService",
+      "Jira & Confluence",
+      "Incident management",
+      "SLA management",
+      "Knowledge base management",
+      "SOC 2 compliance",
+      "Risk assessments",
+      "A3 / Lean",
+      "Technical documentation",
+    ],
+  },
 ];
 
 const EDUCATION = {
