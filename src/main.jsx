@@ -278,11 +278,53 @@ const EDUCATION = {
 };
 
 const PROJECTS = [
-  { name: "Between Us", tagline: "A two-player card game.", tech: ["HTML", "JS"], url: "https://derekdinh1.github.io/betweenus/" },
-  { name: "Laminar Focus", tagline: "A focus coach for deep-work sessions.", tech: ["JavaScript"], url: "https://laminarfocus.com" },
-  { name: "Dayview", tagline: "A daily brief with live weather.", tech: ["JavaScript"], url: "https://derekdinh1.github.io/dayview/" },
-  { name: "Auction War Room", tagline: "A fantasy football draft tracker.", tech: ["JavaScript"], url: "https://derekdinh1.github.io/auction-war-room/" },
-  { name: "TradesXP", tagline: "A trading journal for building discipline.", tech: ["JavaScript"], url: "https://tradesxp.com" },
+  {
+    name: "UVoice",
+    tagline:
+      "Turn your writing voice into a prompt you can feed any AI. Built as a learning project: prompt generator, then AI skill, then AI agent.",
+    tech: [
+      "React",
+      "TypeScript",
+      "Vite",
+      "Tailwind",
+      "Zustand",
+      "Zod",
+      "Whisper",
+      "Cursor",
+      "Claude Code",
+    ],
+    url: "https://github.com/DerekDinh1/uvoice",
+  },
+  {
+    name: "Between Us",
+    tagline: "A card game for two.",
+    tech: ["HTML", "JS", "Cursor", "Claude Code"],
+    url: "https://derekdinh1.github.io/betweenus/",
+  },
+  {
+    name: "Auction War Room",
+    tagline: "Track your fantasy football auction draft as it happens.",
+    tech: ["JavaScript", "Supabase", "Cursor", "Claude Code"],
+    url: "https://derekdinh1.github.io/auction-war-room/",
+  },
+  {
+    name: "Laminar Focus",
+    tagline: "A little coach for getting into deep work.",
+    tech: ["JavaScript", "Cloudflare", "Supabase", "Cursor", "Claude Code"],
+    url: "https://laminarfocus.com",
+  },
+  {
+    name: "Dayview",
+    tagline: "Your day at a glance, with live weather.",
+    tech: ["JavaScript", "Cursor", "Claude Code"],
+    url: "https://derekdinh1.github.io/dayview/",
+  },
+  {
+    name: "TradesXP",
+    tagline: "A trading journal that helps you stay disciplined.",
+    tech: ["JavaScript", "Cloudflare", "Supabase", "Cursor", "Claude Code"],
+    url: "https://tradesxp.com",
+  },
 ];
 
 const PERSONAL = {
