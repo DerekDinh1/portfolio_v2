@@ -958,6 +958,48 @@ video.hero-mascot {
 .proj-card { background: var(--card); border: 1px solid var(--line); border-top: 4px solid var(--accent); border-radius: 14px; padding: 22px; display: flex; flex-direction: column; gap: 10px; }
 .proj-name { font-family: var(--display); font-weight: 700; font-size: 1.2rem; }
 .proj-tag { color: var(--muted); font-size: 0.95rem; flex: 1; }
+.proj-tech {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 2px;
+}
+.proj-tech-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.proj-tech-label {
+  font-family: var(--pixel);
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.chip-stack {
+  background: rgba(47, 58, 99, 0.1);
+  color: #2f3a63;
+}
+.chip-platform {
+  background: rgba(46, 125, 90, 0.12);
+  color: #1f6b4a;
+}
+.chip-ai {
+  background: rgba(184, 120, 40, 0.14);
+  color: #8a5a18;
+}
+html[data-time="night"] .chip-stack {
+  background: rgba(143, 180, 224, 0.16);
+  color: #c5daf5;
+}
+html[data-time="night"] .chip-platform {
+  background: rgba(90, 180, 140, 0.18);
+  color: #9fd9bb;
+}
+html[data-time="night"] .chip-ai {
+  background: rgba(232, 196, 90, 0.16);
+  color: #f0d48a;
+}
 .proj-links a { color: var(--accent); font-weight: 600; text-decoration: none; }
 .proj-links a:hover { text-decoration: underline; }
 .proj-private { color: var(--muted); font-style: italic; font-size: 0.9rem; }

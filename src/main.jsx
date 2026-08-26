@@ -327,6 +327,41 @@ const PROJECTS = [
   },
 ];
 
+const TECH_KIND = {
+  HTML: "stack",
+  JS: "stack",
+  JavaScript: "stack",
+  TypeScript: "stack",
+  React: "stack",
+  Vite: "stack",
+  Tailwind: "stack",
+  Zustand: "stack",
+  Zod: "stack",
+  Whisper: "stack",
+  Supabase: "platform",
+  Cloudflare: "platform",
+  Cursor: "ai",
+  "Claude Code": "ai",
+};
+
+const TECH_GROUP_ORDER = [
+  { kind: "stack", label: "Stack" },
+  { kind: "platform", label: "Platform" },
+  { kind: "ai", label: "AI" },
+];
+
+function groupTech(tech) {
+  const buckets = { stack: [], platform: [], ai: [] };
+  for (const name of tech) {
+    const kind = TECH_KIND[name] ?? "stack";
+    buckets[kind].push(name);
+  }
+  return TECH_GROUP_ORDER.filter((g) => buckets[g.kind].length > 0).map((g) => ({
+    ...g,
+    items: buckets[g.kind],
+  }));
+}
+
 const PERSONAL = {
   intro:
     "Off the clock, I run on recommendations nobody asked for. Here's the party.",
@@ -987,11 +1022,18 @@ function Projects() {
               <Reveal className="proj-card" as="article" key={p.name} delay={i * 0.06}>
                 <h3 className="proj-name">{p.name}</h3>
                 <p className="proj-tag">{p.tagline}</p>
-                <ul className="chips">
-                  {p.tech.map((t) => (
-                    <li className="chip" key={t}>{t}</li>
+                <div className="proj-tech">
+                  {groupTech(p.tech).map((group) => (
+                    <div className="proj-tech-group" key={group.kind}>
+                      <span className="proj-tech-label">{group.label}</span>
+                      <ul className="chips">
+                        {group.items.map((t) => (
+                          <li className={`chip chip-${group.kind}`} key={t}>{t}</li>
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
                 <div className="proj-links">
                   <a href={p.url} target="_blank" rel="noopener noreferrer">Visit →</a>
                 </div>
