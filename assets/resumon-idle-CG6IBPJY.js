@@ -1,0 +1,1 @@
+var e=`/assets/resumon-idle-ClkrWl-E.webm`;export{e as default};

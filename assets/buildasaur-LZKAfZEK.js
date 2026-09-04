@@ -1,0 +1,1 @@
+var e=`/assets/buildasaur-CztVl6ct.png`;export{e as default};

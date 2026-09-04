@@ -1,0 +1,1 @@
+var e=`/assets/resumon-hi-Cw9gIiEn.webm`;export{e as default};

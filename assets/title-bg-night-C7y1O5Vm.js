@@ -1,0 +1,1 @@
+var e=`/assets/title-bg-night-B9Qq8iWA.jpg`;export{e as default};

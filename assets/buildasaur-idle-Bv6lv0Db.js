@@ -1,0 +1,1 @@
+var e=`/assets/buildasaur-idle-DMa9c0P2.webm`;export{e as default};

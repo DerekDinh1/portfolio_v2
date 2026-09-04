@@ -1,0 +1,1 @@
+var e=`/assets/title-bg-day-BkYwsXgB.mp4`;export{e as default};
