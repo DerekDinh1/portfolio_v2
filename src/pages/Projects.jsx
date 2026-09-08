@@ -210,20 +210,6 @@ function ProjectCard({ p, delay, active, onSelectShot }) {
       preset="spark"
       delay={delay}
       onClick={hasShot ? () => onSelectShot?.(p) : undefined}
-      onKeyDown={
-        hasShot
-          ? (e) => {
-              if (e.key === "Enter" || e.key === " ") {
-                e.preventDefault();
-                onSelectShot?.(p);
-              }
-            }
-          : undefined
-      }
-      role={hasShot ? "button" : undefined}
-      tabIndex={hasShot ? 0 : undefined}
-      aria-label={hasShot ? `Show ${p.name} in the screenshot carousel` : undefined}
-      aria-pressed={hasShot ? active : undefined}
     >
       <h3 className="proj-name">{p.name}</h3>
       <p className="proj-what">{p.what}</p>
@@ -252,6 +238,19 @@ function ProjectCard({ p, delay, active, onSelectShot }) {
         ) : null}
       </div>
       <div className="proj-links">
+        {hasShot ? (
+          <button
+            type="button"
+            className="proj-show-shot"
+            aria-pressed={active}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectShot?.(p);
+            }}
+          >
+            Show shot
+          </button>
+        ) : null}
         <a
           href={p.url}
           target="_blank"

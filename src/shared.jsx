@@ -306,11 +306,13 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
 function HeroSpeech({ speech, reduce }) {
   if (!speech?.text && !speech?.kind) return null;
   const hint = Boolean(speech.hint);
+  const typing = Boolean(speech.caret);
   return (
     <motion.div
       className={`hero-speech${hint ? " hero-speech-hint" : ""}`}
       role="status"
-      aria-live="polite"
+      aria-live={typing ? "off" : "polite"}
+      aria-atomic="true"
       initial={reduce ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: reduce ? 0 : 0.35, ease: EASE_OUT }}
@@ -320,7 +322,7 @@ function HeroSpeech({ speech, reduce }) {
       <p className="hero-speech-text">
         {speech.kind ? <span className="rec-kind">{speech.kind}</span> : null}
         {speech.text}
-        {speech.caret ? <span className="type-caret" aria-hidden="true">▌</span> : null}
+        {typing ? <span className="type-caret" aria-hidden="true">▌</span> : null}
       </p>
     </motion.div>
   );
