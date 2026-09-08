@@ -79,6 +79,7 @@ export const SKILLS = [
     items: [
       "Console AI",
       "Agentic AI development",
+      "AI management",
       "OpenAI (ChatGPT)",
       "Claude",
       "Zapier",
@@ -88,6 +89,7 @@ export const SKILLS = [
       "Python",
       "JavaScript",
       "bash",
+      "GitHub",
     ],
   },
   {
