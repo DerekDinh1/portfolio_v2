@@ -39,13 +39,30 @@ export default function Professional() {
     };
   }, []);
 
+  const onMascotActivate = () => {
+    setMascotLoop("hi");
+    if (greetTimerRef.current) clearTimeout(greetTimerRef.current);
+    greetTimerRef.current = setTimeout(() => setMascotLoop("idle"), 1200);
+  };
+
   return (
     <main className="page theme-water">
-      <PageHero starter={starter} variant="dossier" mascotLoop={mascotLoop}>
+      <PageHero
+        starter={starter}
+        variant="dossier"
+        mascotLoop={mascotLoop}
+        mascotHref={RESUME_PDF}
+        mascotDownload
+        mascotLabel={`Download résumé from ${starter.name}`}
+        onMascotActivate={onMascotActivate}
+        speech={{
+          name: starter.name.toUpperCase(),
+          text: "Tap me to download my résumé!",
+          hint: true,
+          key: "hint-resume",
+        }}
+      >
         <div className="hero-cta-row">
-          <a className="btn btn-red hero-cta" href={RESUME_PDF} download>
-            Download résumé
-          </a>
           <span className="availability-chip">
             <span className="availability-dot" aria-hidden="true" />
             Open to senior IT · automation · AI ops

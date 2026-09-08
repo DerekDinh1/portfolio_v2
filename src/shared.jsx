@@ -303,6 +303,29 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
   );
 }
 
+function HeroSpeech({ speech, reduce }) {
+  if (!speech?.text && !speech?.kind) return null;
+  const hint = Boolean(speech.hint);
+  return (
+    <motion.div
+      className={`hero-speech${hint ? " hero-speech-hint" : ""}`}
+      role="status"
+      aria-live="polite"
+      initial={reduce ? false : { opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: reduce ? 0 : 0.35, ease: EASE_OUT }}
+      key={speech.key || speech.kind || "speech"}
+    >
+      {speech.name ? <span className="hero-speech-name">{speech.name}</span> : null}
+      <p className="hero-speech-text">
+        {speech.kind ? <span className="rec-kind">{speech.kind}</span> : null}
+        {speech.text}
+        {speech.caret ? <span className="type-caret" aria-hidden="true">▌</span> : null}
+      </p>
+    </motion.div>
+  );
+}
+
 // variant: "dossier" (Professional) | "workbench" (Projects) | "card" (Personal)
 export function PageHero({
   starter,
@@ -310,6 +333,12 @@ export function PageHero({
   mascotLoop = "idle",
   mascotBehavior,
   onMascotActivate,
+  mascotHref,
+  mascotDownload = false,
+  mascotTarget,
+  mascotRel,
+  mascotLabel,
+  speech,
   children,
 }) {
   const reduce = useReducedMotion();
@@ -334,11 +363,34 @@ export function PageHero({
     };
   }, [starter, isNight]);
 
-  const tappable = variant === "card" && typeof onMascotActivate === "function";
   const mascotAlt = `${starter.name}, the ${starter.type}-type starter`;
+  const actionLabel = mascotLabel || `Tap ${starter.name}`;
   const mascot = (
     <MascotSprite starter={starter} loop={mascotLoop} className="hero-mascot" alt={mascotAlt} />
   );
+
+  let mascotNode = mascot;
+  if (mascotHref) {
+    mascotNode = (
+      <a
+        className="hero-mascot-btn"
+        href={mascotHref}
+        download={mascotDownload || undefined}
+        target={mascotTarget}
+        rel={mascotRel}
+        aria-label={actionLabel}
+        onClick={onMascotActivate}
+      >
+        {mascot}
+      </a>
+    );
+  } else if (typeof onMascotActivate === "function") {
+    mascotNode = (
+      <button type="button" className="hero-mascot-btn" onClick={onMascotActivate} aria-label={actionLabel}>
+        {mascot}
+      </button>
+    );
+  }
 
   return (
     <section
@@ -368,18 +420,10 @@ export function PageHero({
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: reduce ? 0 : 0.55, delay: reduce ? 0 : 0.08, ease: EASE_OUT }}
         >
-          {tappable ? (
-            <button
-              type="button"
-              className="hero-mascot-btn"
-              onClick={onMascotActivate}
-              aria-label={`Tap ${starter.name} for a surprise`}
-            >
-              {mascot}
-            </button>
-          ) : (
-            mascot
-          )}
+          <div className="hero-mascot-stage">
+            <HeroSpeech speech={speech} reduce={reduce} />
+            {mascotNode}
+          </div>
         </motion.div>
       </div>
     </section>

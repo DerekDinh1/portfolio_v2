@@ -54,6 +54,12 @@ const RAW_PROJECTS = [
     url: "https://derekdinh1.github.io/dayview/",
     linkType: "live",
     loadScreenshot: () => import("../assets/projects/dayview.jpg"),
+    moreLinks: [
+      {
+        label: "See version 2 built in Claude Cowork",
+        url: "https://claude.ai/code/artifact/948049cf-eddd-4ea6-a8cc-9462f072da66",
+      },
+    ],
   },
   {
     name: "TradesXP",

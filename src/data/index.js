@@ -11,5 +11,5 @@ export {
   EDUCATION,
 } from "./professional.js";
 export { PROJECTS, TECH_KIND, TECH_GROUP_ORDER, groupTech } from "./projects.js";
-export { PERSONAL, RECS } from "./personal.js";
+export { PERSONAL, RECS, RECOMMENDATIONS } from "./personal.js";
 export { STARTERS } from "./starters.js";
