@@ -18,3 +18,13 @@ export const PERSONAL = {
     "Favorite book no one's heard of: If Nobody Speaks of Remarkable Things.",
   ],
 };
+
+// Draft placeholders for Give me a rec. Replace with Derek's real list before ship.
+export const RECS = [
+  { kind: "book", text: "If Nobody Speaks of Remarkable Things. Quiet, devastating, worth the reread." },
+  { kind: "movie", text: "Paddington 2. Warm, funny, and somehow earnest without being soft." },
+  { kind: "anime", text: "Frieren: Beyond Journey's End. Slow burn, and it sticks with you." },
+  { kind: "game", text: "Slay the Spire. The run I still think about mid-workday." },
+  { kind: "trail", text: "Herman Gulch. Steep enough to earn the view, short enough for a weekday." },
+  { kind: "game", text: "Dave the Diver. Cozy on the surface, surprisingly deep underneath." },
+];

@@ -1,34 +1,68 @@
+import { useEffect, useRef, useState } from "react";
 import {
   STARTERS,
-  STATS,
   PROFESSIONAL_THROUGLINE,
   FOCUS,
   EXPERIENCE,
+  EARLIER_EXPERIENCE,
   SKILLS,
   EDUCATION,
+  RESUME_PDF,
 } from "../data/index.js";
-import { PageHero, Reveal, Contact, ExpRow } from "../shared.jsx";
+import { PageHero, Reveal, Contact, ExpRow, ExpRail, StatBars } from "../shared.jsx";
 
 export default function Professional() {
   const starter = STARTERS[0];
+  const [mascotLoop, setMascotLoop] = useState("idle");
+  const expSectionRef = useRef(null);
+  const greetTimerRef = useRef(null);
+
+  useEffect(() => {
+    const el = expSectionRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return undefined;
+
+    let greeted = false;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !greeted) {
+          greeted = true;
+          setMascotLoop("hi");
+          greetTimerRef.current = setTimeout(() => setMascotLoop("idle"), 1400);
+        }
+      },
+      { threshold: 0.35 }
+    );
+    observer.observe(el);
+    return () => {
+      observer.disconnect();
+      if (greetTimerRef.current) clearTimeout(greetTimerRef.current);
+    };
+  }, []);
+
   return (
     <main className="page theme-water">
-      <PageHero starter={starter} />
+      <PageHero starter={starter} variant="dossier" mascotLoop={mascotLoop}>
+        <div className="hero-cta-row">
+          <a className="btn btn-red hero-cta" href={RESUME_PDF} download>
+            Download résumé
+          </a>
+          <span className="availability-chip">
+            <span className="availability-dot" aria-hidden="true" />
+            Open to senior IT · automation · AI ops
+          </span>
+        </div>
+      </PageHero>
       <div className="wrap">
-        <Reveal className="career-throughline" as="section">
+        <Reveal className="career-throughline" as="section" preset="flow">
           <p>{PROFESSIONAL_THROUGLINE}</p>
         </Reveal>
 
-        <section className="stats">
-          {STATS.map((s, i) => (
-            <Reveal className="stat" key={s.l} delay={i * 0.06}>
-              <div className="stat-n">{s.n}</div>
-              <div className="stat-l">{s.l}</div>
-            </Reveal>
-          ))}
-        </section>
+        <Reveal className="block" as="section" preset="flow">
+          <h2 className="block-h">By the numbers</h2>
+          <StatBars />
+        </Reveal>
 
-        <Reveal className="block" as="section">
+        <Reveal className="block" as="section" preset="flow">
           <h2 className="block-h">What I'm focused on</h2>
           <ul className="notable">
             {FOCUS.map((t, i) => (
@@ -37,16 +71,29 @@ export default function Professional() {
           </ul>
         </Reveal>
 
-        <Reveal className="block" as="section">
-          <h2 className="block-h">Experience</h2>
-          <ul className="exp">
-            {EXPERIENCE.map((e, i) => (
-              <ExpRow job={e} key={e.org} delay={i * 0.05} />
-            ))}
-          </ul>
+        <Reveal className="block" as="section" preset="flow">
+          <div ref={expSectionRef}>
+            <h2 className="block-h">Experience</h2>
+            <ExpRail>
+              {EXPERIENCE.map((e, i) => (
+                <ExpRow job={e} key={e.org} delay={i * 0.05} latest={i === 0} preset="flow" />
+              ))}
+            </ExpRail>
+
+            <h3 className="exp-earlier-h">Earlier experience</h3>
+            <ul className="exp-earlier">
+              {EARLIER_EXPERIENCE.map((e) => (
+                <li key={e.org} className="exp-earlier-row">
+                  <span className="exp-earlier-org">{e.org}</span>
+                  <span className="exp-earlier-role">{e.role}</span>
+                  <span className="exp-earlier-when">{e.when}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
         </Reveal>
 
-        <Reveal className="block" as="section">
+        <Reveal className="block" as="section" preset="flow">
           <h2 className="block-h">Skills</h2>
           <div className="skills">
             {SKILLS.map((g) => (
@@ -62,7 +109,7 @@ export default function Professional() {
           </div>
         </Reveal>
 
-        <Reveal className="block" as="section">
+        <Reveal className="block" as="section" preset="flow">
           <h2 className="block-h">Education</h2>
           <div className="edu">
             <div className="edu-head">
@@ -74,7 +121,7 @@ export default function Professional() {
           </div>
         </Reveal>
       </div>
-      <Contact />
+      <Contact variant="professional" />
     </main>
   );
 }

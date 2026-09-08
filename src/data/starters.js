@@ -7,8 +7,14 @@ export const STARTERS = [
     theme: "water",
     loadImg: () => import("../assets/mascots/resumon.png"),
     loadHi: () => import("../assets/mascots/resumon-hi.webm"),
+    loadHiMov: () => import("../assets/mascots/resumon-hi.mov"),
     loadIdle: () => import("../assets/mascots/resumon-idle.webm"),
-    tagline: "9+ years across IT support, security, and systems. Lately, automation and agentic AI.",
+    loadIdleMov: () => import("../assets/mascots/resumon-idle.mov"),
+    loadBackdrop: (night) =>
+      night
+        ? import("../assets/habitats/water-night.jpg")
+        : import("../assets/habitats/water-day.jpg"),
+    tagline: "9+ year IT professional. Non-generative human just trying to be friends with AI before it takes over the world.",
     blurb: "Experience, automation, and integrations.",
   },
   {
@@ -19,7 +25,13 @@ export const STARTERS = [
     theme: "fire",
     loadImg: () => import("../assets/mascots/buildasaur.png"),
     loadHi: () => import("../assets/mascots/buildasaur-hi.webm"),
+    loadHiMov: () => import("../assets/mascots/buildasaur-hi.mov"),
     loadIdle: () => import("../assets/mascots/buildasaur-idle.webm"),
+    loadIdleMov: () => import("../assets/mascots/buildasaur-idle.mov"),
+    loadBackdrop: (night) =>
+      night
+        ? import("../assets/habitats/fire-night.jpg")
+        : import("../assets/habitats/fire-day.jpg"),
     tagline: "Small apps I build after hours.",
     blurb: "Projects, straight from GitHub.",
   },
@@ -31,7 +43,13 @@ export const STARTERS = [
     theme: "grass",
     loadImg: () => import("../assets/mascots/vibeon.png"),
     loadHi: () => import("../assets/mascots/vibeon-hi.webm"),
+    loadHiMov: () => import("../assets/mascots/vibeon-hi.mov"),
     loadIdle: () => import("../assets/mascots/vibeon-idle.webm"),
+    loadIdleMov: () => import("../assets/mascots/vibeon-idle.mov"),
+    loadBackdrop: (night) =>
+      night
+        ? import("../assets/habitats/grass-night.jpg")
+        : import("../assets/habitats/grass-day.jpg"),
     tagline: "Anime, golf, games, and Colorado trails.",
     blurb: "The person behind the tickets.",
   },

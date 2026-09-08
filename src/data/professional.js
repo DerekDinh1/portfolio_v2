@@ -1,9 +1,11 @@
 export const EXP_VISIBLE_DEFAULT = 2;
 
+export const RESUME_PDF = "/Derek-Dinh-Resume.pdf";
+
 export const FOCUS = [
-  "IT security, process, and systems management across fast-moving teams.",
-  "Automation and AI implementation through agentic AI development.",
-  "Growth mentorship for junior team members.",
+  "Design, build, and manage agentic AI that takes work off the queue.",
+  "IT security, process, and systems so those tools stay reliable in production.",
+  "Mentor the team to run and improve the experience for everyone.",
 ];
 
 export const EXPERIENCE = [
@@ -11,9 +13,10 @@ export const EXPERIENCE = [
     org: "Spring Health",
     role: "Senior IT Support Engineer",
     when: "Feb 2025 to Jul 2026",
+    stamp: "AI · automation",
     points: [
-      "Architected agentic AI models across department platforms and company channels using Console, ChatGPT, and Claude, driving over 70% automated ticket resolutions.",
-      "Revamped SOPs to increase team procedure efficiency and unlocked further automation from those frameworks.",
+      "Built agentic AI across department platforms and company channels with Console, ChatGPT, and Claude. Over 70% of tickets now resolve before a human has to touch them.",
+      "Reworked SOPs so the team could move faster, which also made more of the work automatable.",
       "Served as a senior escalation point for technical issues, partnering with stakeholders to keep resolution timely and service continuous.",
       "Managed technology integration and migration during acquisition efforts, coordinating across teams to minimize disruption.",
     ],
@@ -61,6 +64,13 @@ export const EXPERIENCE = [
       "Resolved user issues quickly while finding creative fixes for unique problems across teams and executives.",
     ],
   },
+];
+
+export const EARLIER_EXPERIENCE = [
+  { org: "FORM MarketX (formerly GoSpotCheck)", role: "Software Support Specialist", when: "Oct 2018 to Dec 2019" },
+  { org: "Spectrum", role: "FE Development Testing Intern", when: "May 2018 to Aug 2018" },
+  { org: "Prologis", role: "Tech Zone Supervisor (Contract)", when: "Mar 2018 to May 2018" },
+  { org: "2U", role: "IT / Helpdesk Intern", when: "Mar 2017 to Jul 2017" },
 ];
 
 export const SKILLS = [

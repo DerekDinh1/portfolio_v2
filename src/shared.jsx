@@ -1,9 +1,9 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { motion, useReducedMotion } from "motion/react";
-import { CONTACT } from "./data/index.js";
+import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { CONTACT, CONTACT_BLURB, STATS } from "./data/index.js";
 import { EXP_VISIBLE_DEFAULT } from "./data/professional.js";
-import { CAN_PLAY_WEBM } from "./lib/media.js";
+import { CAN_PLAY_HEVC, CAN_PLAY_ALPHA_VIDEO } from "./lib/media.js";
 
 export const TITLE_AMBIENCE_RATE = 0.45;
 export const TITLE_AMBIENCE_CROSSFADE_WALL_S = 1.75;
@@ -16,21 +16,67 @@ const MOTION_TAGS = {
   li: motion.li,
 };
 
-export function Reveal({ children, className = "", as = "div", delay = 0, ...rest }) {
+// Per-habitat motion presets: flow (water), spark (fire), sway (grass).
+// Undefined preset keeps the original Reveal feel.
+const REVEAL_PRESETS = {
+  flow: { duration: 0.7, ease: [0.33, 1, 0.68, 1], y: 10 },
+  spark: { duration: 0.32, ease: "easeOut", y: 14, scale: [0.96, 1] },
+  sway: { duration: 0.55, ease: EASE_OUT, y: 12, rotate: [-2, 0] },
+};
+
+export function Reveal({ children, className = "", as = "div", delay = 0, preset, ...rest }) {
   const reduce = useReducedMotion();
   const Tag = MOTION_TAGS[as] || motion.div;
+  const p = preset ? REVEAL_PRESETS[preset] : null;
+  const duration = p ? p.duration : 0.45;
+  const ease = p ? p.ease : EASE_OUT;
+  const y = p ? p.y : 18;
+
+  const initial = reduce
+    ? false
+    : {
+        opacity: 0,
+        y,
+        ...(p?.scale ? { scale: p.scale[0] } : null),
+        ...(p?.rotate ? { rotate: p.rotate[0] } : null),
+      };
+  const whileInView = reduce
+    ? undefined
+    : {
+        opacity: 1,
+        y: 0,
+        ...(p?.scale ? { scale: p.scale[1] } : null),
+        ...(p?.rotate ? { rotate: p.rotate[1] } : null),
+      };
+
   return (
     <Tag
       className={className}
-      initial={reduce ? false : { opacity: 0, y: 18 }}
-      whileInView={reduce ? undefined : { opacity: 1, y: 0 }}
+      initial={initial}
+      whileInView={whileInView}
       viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: reduce ? 0 : 0.45, delay: reduce ? 0 : delay, ease: EASE_OUT }}
+      transition={{ duration: reduce ? 0 : duration, delay: reduce ? 0 : delay, ease }}
       {...rest}
     >
       {children}
     </Tag>
   );
+}
+
+// Tracks html[data-time] so components outside main.jsx's TimeProvider
+// (e.g. habitat backdrops) can react to day/night without a circular import.
+function useIsNight() {
+  const [night, setNight] = useState(
+    () => typeof document !== "undefined" && document.documentElement.dataset.time === "night"
+  );
+  useEffect(() => {
+    if (typeof document === "undefined") return undefined;
+    const el = document.documentElement;
+    const obs = new MutationObserver(() => setNight(el.dataset.time === "night"));
+    obs.observe(el, { attributes: true, attributeFilter: ["data-time"] });
+    return () => obs.disconnect();
+  }, []);
+  return night;
 }
 
 export function SeamlessAmbienceVideo({ src, poster, className, active }) {
@@ -134,11 +180,17 @@ export function SeamlessAmbienceVideo({ src, poster, className, active }) {
   );
 }
 
-export function MascotSprite({ starter, loop, className, alt }) {
+// loop: "idle" | "hi" | "sleep" (sleep falls back to idle if the starter has no sleep asset)
+export function MascotSprite({ starter, loop = "idle", className, alt, playOnce = false, onEnded }) {
   const reduce = useReducedMotion();
+  const videoRef = useRef(null);
   const [failed, setFailed] = useState(false);
   const [imgSrc, setImgSrc] = useState(null);
-  const [videoSrc, setVideoSrc] = useState(null);
+  const [movSrc, setMovSrc] = useState(null);
+  const [webmSrc, setWebmSrc] = useState(null);
+
+  const hasSleepAsset = !!(starter.loadSleep || starter.loadSleepMov);
+  const effectiveLoop = loop === "sleep" && !hasSleepAsset ? "idle" : loop;
 
   useEffect(() => {
     let cancelled = false;
@@ -154,85 +206,195 @@ export function MascotSprite({ starter, loop, className, alt }) {
   }, [starter]);
 
   useEffect(() => {
-    if (reduce || !CAN_PLAY_WEBM) return undefined;
+    setFailed(false);
+    if (reduce || !CAN_PLAY_ALPHA_VIDEO) return undefined;
+
     let cancelled = false;
-    const loader = loop === "hi" ? starter.loadHi : starter.loadIdle;
-    loader()
-      .then((mod) => {
-        if (!cancelled) setVideoSrc(mod.default);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
+    const movLoader =
+      effectiveLoop === "hi" ? starter.loadHiMov : effectiveLoop === "sleep" ? starter.loadSleepMov : starter.loadIdleMov;
+    const webmLoader =
+      effectiveLoop === "hi" ? starter.loadHi : effectiveLoop === "sleep" ? starter.loadSleep : starter.loadIdle;
+
+    const jobs = [];
+    if (CAN_PLAY_HEVC && movLoader) {
+      jobs.push(
+        movLoader()
+          .then((mod) => mod.default)
+          .catch(() => null)
+      );
+    } else {
+      jobs.push(Promise.resolve(null));
+    }
+    if (webmLoader) {
+      jobs.push(
+        webmLoader()
+          .then((mod) => mod.default)
+          .catch(() => null)
+      );
+    } else {
+      jobs.push(Promise.resolve(null));
+    }
+
+    Promise.all(jobs).then(([mov, webm]) => {
+      if (cancelled) return;
+      if (!mov && !webm) {
+        setFailed(true);
+        return;
+      }
+      // Swap only when the next clip is ready so the sprite doesn't blank mid-transition.
+      setMovSrc(mov);
+      setWebmSrc(webm);
+    });
+
     return () => {
       cancelled = true;
     };
-  }, [starter, loop, reduce]);
+  }, [starter, effectiveLoop, reduce]);
+
+  // Only force a reload when the loop clip changes, not on the initial source attach
+  // (autoPlay handles the first play). Reloading on first attach caused a visible hitch.
+  const loopRef = useRef(effectiveLoop);
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v || (!movSrc && !webmSrc)) return undefined;
+    if (loopRef.current === effectiveLoop) {
+      const play = v.play();
+      if (play && typeof play.catch === "function") play.catch(() => {});
+      return undefined;
+    }
+    loopRef.current = effectiveLoop;
+    v.load();
+    const play = v.play();
+    if (play && typeof play.catch === "function") play.catch(() => {});
+    return undefined;
+  }, [movSrc, webmSrc, effectiveLoop, playOnce]);
 
   if (!imgSrc) {
     return <span className={className} role="img" aria-label={alt} />;
   }
 
-  if (reduce || !videoSrc || failed || !CAN_PLAY_WEBM) {
+  const canAnimate = !reduce && !failed && CAN_PLAY_ALPHA_VIDEO && (movSrc || webmSrc);
+  if (!canAnimate) {
     return <img className={className} src={imgSrc} alt={alt} loading="lazy" />;
   }
 
   return (
     <video
+      ref={videoRef}
       className={className}
-      src={videoSrc}
       poster={imgSrc}
       autoPlay
-      loop
+      loop={!playOnce}
       muted
       playsInline
       aria-label={alt}
       onLoadedMetadata={(e) => {
-        e.currentTarget.playbackRate = 1.25;
-        e.currentTarget.defaultPlaybackRate = 1.25;
+        e.currentTarget.playbackRate = 1.15;
+        e.currentTarget.defaultPlaybackRate = 1.15;
+      }}
+      onEnded={() => {
+        if (playOnce && typeof onEnded === "function") onEnded();
       }}
       onError={() => setFailed(true)}
-    />
+    >
+      {movSrc ? <source src={movSrc} type='video/mp4; codecs="hvc1"' /> : null}
+      {webmSrc ? <source src={webmSrc} type="video/webm" /> : null}
+    </video>
   );
 }
 
-export function PageHero({ starter }) {
+// variant: "dossier" (Professional) | "workbench" (Projects) | "card" (Personal)
+export function PageHero({
+  starter,
+  variant = "dossier",
+  mascotLoop = "idle",
+  mascotBehavior,
+  onMascotActivate,
+  children,
+}) {
   const reduce = useReducedMotion();
+  const isNight = useIsNight();
+  const [backdropSrc, setBackdropSrc] = useState(null);
+
+  useEffect(() => {
+    if (!starter.loadBackdrop) {
+      setBackdropSrc(null);
+      return undefined;
+    }
+    let cancelled = false;
+    starter
+      .loadBackdrop(isNight)
+      .then((mod) => {
+        if (cancelled) return;
+        setBackdropSrc(typeof mod === "string" ? mod : (mod?.default ?? null));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [starter, isNight]);
+
+  const tappable = variant === "card" && typeof onMascotActivate === "function";
+  const mascotAlt = `${starter.name}, the ${starter.type}-type starter`;
+  const mascot = (
+    <MascotSprite starter={starter} loop={mascotLoop} className="hero-mascot" alt={mascotAlt} />
+  );
+
   return (
-    <section className={`hero theme-${starter.theme}`}>
-      <motion.div
-        className="hero-copy"
-        initial={reduce ? false : { opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: reduce ? 0 : 0.5, ease: EASE_OUT }}
-      >
-        <span className="dex">{starter.dex} · {starter.type} type</span>
-        <h1 className="hero-name">{starter.name}</h1>
-        <p className="hero-tagline">{starter.tagline}</p>
-      </motion.div>
-      <motion.div
-        className="hero-art"
-        initial={reduce ? false : { opacity: 0, scale: 0.92 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: reduce ? 0 : 0.55, delay: reduce ? 0 : 0.08, ease: EASE_OUT }}
-      >
-        <MascotSprite
-          starter={starter}
-          loop="idle"
-          className="hero-mascot"
-          alt={`${starter.name}, the ${starter.type}-type starter`}
-        />
-      </motion.div>
+    <section
+      className={`hero hero--${variant} theme-${starter.theme}`}
+      data-behavior={mascotBehavior || undefined}
+    >
+      {backdropSrc ? (
+        <div className="hero-backdrop" aria-hidden="true">
+          <img src={backdropSrc} alt="" />
+        </div>
+      ) : null}
+      <div className="hero-inner">
+        <motion.div
+          className="hero-copy"
+          initial={reduce ? false : { opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: reduce ? 0 : 0.5, ease: EASE_OUT }}
+        >
+          <span className="dex">{starter.dex} · {starter.type} type</span>
+          <h1 className="hero-name">{starter.name}</h1>
+          <p className="hero-tagline">{starter.tagline}</p>
+          {children}
+        </motion.div>
+        <motion.div
+          className="hero-art"
+          initial={reduce ? false : { opacity: 0, scale: 0.92 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: reduce ? 0 : 0.55, delay: reduce ? 0 : 0.08, ease: EASE_OUT }}
+        >
+          {tappable ? (
+            <button
+              type="button"
+              className="hero-mascot-btn"
+              onClick={onMascotActivate}
+              aria-label={`Tap ${starter.name} for a surprise`}
+            >
+              {mascot}
+            </button>
+          ) : (
+            mascot
+          )}
+        </motion.div>
+      </div>
     </section>
   );
 }
 
-export function Contact() {
+export function Contact({ variant }) {
   const navigate = useNavigate();
+  const blurb =
+    (variant && CONTACT_BLURB[variant]) ||
+    "Recruiters, collaborators, or anyone with a movie recommendation. Find me here.";
   return (
     <footer className="contact">
       <h2>Get in touch</h2>
-      <p>Recruiters, collaborators, or anyone with a movie recommendation. Find me here.</p>
+      <p>{blurb}</p>
       <div className="contact-links">
         <a className="btn btn-red" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">LinkedIn</a>
         <a className="btn btn-ghost" href={CONTACT.github} target="_blank" rel="noopener noreferrer">GitHub</a>
@@ -251,16 +413,19 @@ export function Contact() {
   );
 }
 
-export function ExpRow({ job, delay }) {
+export function ExpRow({ job, delay, latest = false, preset }) {
   const [expanded, setExpanded] = useState(false);
   const hidden = job.points.length > EXP_VISIBLE_DEFAULT;
   const visiblePoints = expanded ? job.points : job.points.slice(0, EXP_VISIBLE_DEFAULT);
 
   return (
-    <Reveal className="exp-row" as="li" delay={delay}>
+    <Reveal className="exp-row" as="li" delay={delay} preset={preset}>
       <div className="exp-head">
         <div>
-          <div className="exp-org">{job.org}</div>
+          <div className="exp-org">
+            {job.org}
+            {job.stamp ? <span className="exp-latest">{job.stamp}</span> : latest ? <span className="exp-latest">Latest</span> : null}
+          </div>
           <div className="exp-role">{job.role}</div>
         </div>
         <span className="exp-when">{job.when}</span>
@@ -281,6 +446,65 @@ export function ExpRow({ job, delay }) {
         </button>
       ) : null}
     </Reveal>
+  );
+}
+
+// Prefer an explicit bar % when the label is not a parseable number ("Agentic", "Channels").
+function statBarWidth(stat) {
+  if (typeof stat.bar === "number") return Math.min(100, Math.max(4, stat.bar));
+  const str = String(stat.n);
+  const num = parseFloat(str.replace(/[^0-9.]/g, ""));
+  if (!Number.isFinite(num)) return 50;
+  if (str.includes("%")) return Math.min(100, Math.max(4, num));
+  if (num < 100) return Math.min(100, Math.max(4, num * 10));
+  return 85;
+}
+
+export function StatBars({ stats = STATS, delay = 0 }) {
+  const reduce = useReducedMotion();
+  return (
+    <div className="stat-bars">
+      {stats.map((s, i) => (
+        <Reveal className="stat-bar-row" key={s.l} delay={delay + i * 0.06}>
+          <div className="stat-bar-head">
+            <span className="stat-bar-n">{s.n}</span>
+            <span className="stat-bar-l">{s.l}</span>
+          </div>
+          <div className="stat-bar-track">
+            <motion.div
+              className="stat-bar-fill"
+              initial={reduce ? false : { width: "0%" }}
+              whileInView={{ width: `${statBarWidth(s)}%` }}
+              viewport={{ once: true, amount: 0.4 }}
+              transition={{ duration: reduce ? 0 : 0.7, delay: reduce ? 0 : i * 0.08, ease: EASE_OUT }}
+            />
+          </div>
+        </Reveal>
+      ))}
+    </div>
+  );
+}
+
+// Wraps an experience list with a left rail whose fill tracks scroll progress
+// through the section, giving the timeline a sense of depth as you read down it.
+export function ExpRail({ children, className = "exp" }) {
+  const ref = useRef(null);
+  const reduce = useReducedMotion();
+  const { scrollYProgress } = useScroll({
+    target: ref,
+    offset: ["start 0.85", "end 0.4"],
+  });
+  const height = useTransform(scrollYProgress, [0, 1], ["0%", "100%"]);
+
+  return (
+    <div className="exp-rail" ref={ref}>
+      {!reduce ? (
+        <div className="exp-rail-track" aria-hidden="true">
+          <motion.div className="exp-rail-fill" style={{ height }} />
+        </div>
+      ) : null}
+      <ul className={className}>{children}</ul>
+    </div>
   );
 }
 

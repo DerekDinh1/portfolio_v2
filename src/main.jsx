@@ -28,14 +28,13 @@ import {
   CONTACT,
   STARTERS,
   INTRO,
-  TITLE_ROLE,
-  TITLE_PROOF,
 } from "./data/index.js";
 import { loadTitlePosters, loadTitleVideos } from "./lib/media.js";
 import {
   EASE_OUT,
   SeamlessAmbienceVideo,
   RouteFallback,
+  MascotSprite,
 } from "./shared.jsx";
 
 const Professional = lazy(() => import("./pages/Professional.jsx"));
@@ -89,7 +88,7 @@ function DayNightToggle() {
       onClick={toggle}
       aria-label={night ? "Switch to day mode" : "Switch to night mode"}
       aria-pressed={night}
-      title={night ? "Night — tap for day" : "Day — tap for night"}
+      title={night ? "Night · tap for day" : "Day · tap for night"}
     >
       <span className="time-track" aria-hidden="true">
         <span className="time-sky">
@@ -283,17 +282,12 @@ function TitleScreen({ onStart, onSkipIntro }) {
       <div className="title-inner">
         <p className="title-region">Colorado Region</p>
         <h1 className="title-name">DEREK DINH</h1>
-        <p className="title-role">{TITLE_ROLE}</p>
-        <div className="title-proof" aria-label={`${TITLE_PROOF.n} ${TITLE_PROOF.l}`}>
-          <span className="title-proof-n">{TITLE_PROOF.n}</span>
-          <span className="title-proof-l">{TITLE_PROOF.l}</span>
-        </div>
         <div className="title-actions">
           <button className="title-press btn-pop" onClick={onStart}>
             Press Start
           </button>
           <button type="button" className="title-skip btn-pop" onClick={onSkipIntro}>
-            Skip intro — choose a starter
+            Skip intro · choose a starter
           </button>
         </div>
       </div>
@@ -301,12 +295,9 @@ function TitleScreen({ onStart, onSkipIntro }) {
   );
 }
 
-const STARTER_CHOOSE_MS = 520;
-
 function StarterSelect() {
-  const [choosing, setChoosing] = useState(null);
+  const [revealed, setRevealed] = useState({});
   const reduce = useReducedMotion();
-  const navigate = useNavigate();
   const timers = useRef([]);
 
   useEffect(() => {
@@ -315,6 +306,9 @@ function StarterSelect() {
         const img = new Image();
         img.src = mod.default;
       });
+      // Warm the hi loop so the first pop isn't waiting on decode.
+      s.loadHi?.().catch(() => {});
+      s.loadHiMov?.().catch(() => {});
     });
     const pending = timers.current;
     return () => {
@@ -322,44 +316,88 @@ function StarterSelect() {
     };
   }, []);
 
-  const choose = (slug) => {
-    if (choosing) return;
+  const reveal = (slug) => {
+    if (revealed[slug]) return;
     if (reduce) {
-      navigate(`/${slug}`);
+      setRevealed((r) => ({ ...r, [slug]: true }));
       return;
     }
-    setChoosing(slug);
-    const t = setTimeout(() => navigate(`/${slug}`), STARTER_CHOOSE_MS);
-    timers.current.push(t);
+    setRevealed((r) => ({ ...r, [slug]: "opening" }));
+    const t1 = setTimeout(() => {
+      setRevealed((r) => ({ ...r, [slug]: "popping" }));
+    }, 720);
+    const t2 = setTimeout(() => {
+      setRevealed((r) => ({ ...r, [slug]: true }));
+    }, 1850);
+    timers.current.push(t1, t2);
   };
 
   return (
     <section className="select-stage">
       <h1 className="select-title">Choose a starter</h1>
-      <p className="select-sub">One tap sends you there. You can catch all three.</p>
+      <p className="select-sub">Tap a Poké Ball to see who's inside. You can catch all three.</p>
       <div className="starter-grid">
         {STARTERS.map((s) => {
-          const active = choosing === s.slug;
-          const locked = choosing && !active;
+          const state = revealed[s.slug];
+          const opening = state === "opening";
+          const popping = state === "popping";
+          const open = state === true;
           return (
             <div
               key={s.slug}
-              className={`starter-card theme-${s.theme} closed${
-                active ? " choosing" : ""
-              }${locked ? " locked" : ""}`}
+              className={`starter-card ${
+                open
+                  ? `theme-${s.theme} open`
+                  : opening || popping
+                    ? `theme-${s.theme} ${opening ? "opening" : "popping"}`
+                    : "closed"
+              }`}
             >
-              <button
-                type="button"
-                className={`pokeball-btn${active ? " wobbling" : ""}`}
-                onClick={() => choose(s.slug)}
-                disabled={!!choosing}
-                aria-label={`Choose ${s.name}, the ${s.type}-type starter`}
-              >
-                <span className="pokeball" aria-hidden="true" />
-                {active ? <span className="pokeball-burst" aria-hidden="true" /> : null}
-                <span className="pokeball-hint">{s.name}</span>
-                <span className="pokeball-blurb">{s.blurb}</span>
-              </button>
+              {open || popping ? (
+                <>
+                  <div className="starter-mascot-wrap">
+                    {popping ? (
+                      <>
+                        <span className="pokeball pokeball-fade" aria-hidden="true" />
+                        <span className="pokeball-burst" aria-hidden="true" />
+                      </>
+                    ) : null}
+                    <MascotSprite
+                      starter={s}
+                      loop="hi"
+                      className={`starter-img${popping || open ? " emerging" : ""}`}
+                      alt={s.name}
+                    />
+                  </div>
+                  <div
+                    className={`starter-details${open ? " in" : " pending"}`}
+                    aria-hidden={!open}
+                  >
+                    <span className="starter-dex">{s.dex} · {s.type}</span>
+                    <h2 className="starter-name">{s.name}</h2>
+                    <p className="starter-blurb">{s.blurb}</p>
+                    <Link
+                      to={`/${s.slug}`}
+                      className="starter-cta"
+                      tabIndex={open ? 0 : -1}
+                    >
+                      Choose {s.name} →
+                    </Link>
+                  </div>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className={`pokeball-btn${opening ? " wobbling" : ""}`}
+                  onClick={() => reveal(s.slug)}
+                  disabled={opening}
+                  aria-label={`Open ${s.name}, the ${s.type}-type starter`}
+                >
+                  <span className="pokeball" aria-hidden="true" />
+                  {opening ? <span className="pokeball-burst" aria-hidden="true" /> : null}
+                  <span className="pokeball-hint">{s.name}</span>
+                </button>
+              )}
             </div>
           );
         })}
@@ -368,7 +406,7 @@ function StarterSelect() {
   );
 }
 
-function IntroDialogue({ step, setStep, onSkip, onChoose }) {
+function IntroDialogue({ step, setStep, onChoose }) {
   const line = INTRO[step];
   const last = step >= INTRO.length - 1;
   const reduce = useReducedMotion();
@@ -444,10 +482,7 @@ function IntroDialogue({ step, setStep, onSkip, onChoose }) {
             {!done ? <span className="type-caret" aria-hidden="true">▌</span> : null}
           </p>
           {done ? <span className="cursor bounce" aria-hidden="true">▼</span> : null}
-          <div className="dialogue-controls">
-            <button type="button" className="btn btn-ghost btn-pop intro-skip" onClick={onSkip}>
-              Skip to starters
-            </button>
+          <div className="dialogue-controls dialogue-controls-end">
             {last && done ? (
               <button className="btn btn-red btn-pop" onClick={onChoose}>Choose a starter</button>
             ) : (
@@ -505,7 +540,6 @@ function Home() {
             <IntroDialogue
               step={step}
               setStep={setStep}
-              onSkip={() => setScene("select")}
               onChoose={() => setScene("select")}
             />
           </motion.div>
@@ -524,18 +558,45 @@ function Home() {
   );
 }
 
+// Per-route enter variants echo each starter's habitat: a soft rise for
+// water, a quick pop for fire, a gentle rotate-in for grass. Everything
+// else (home, 404) keeps the original fade/slide.
+const ROUTE_MOTION = {
+  "/professional": {
+    initial: { opacity: 0, y: 14 },
+    exit: { opacity: 0, y: -10 },
+    transition: { duration: 0.55, ease: [0.33, 1, 0.68, 1] },
+  },
+  "/projects": {
+    initial: { opacity: 0, scale: 0.98 },
+    exit: { opacity: 0, scale: 0.98 },
+    transition: { duration: 0.28, ease: "easeOut" },
+  },
+  "/personal": {
+    initial: { opacity: 0, rotate: -1.5, y: 10 },
+    exit: { opacity: 0, rotate: 1.5, y: -8 },
+    transition: { duration: 0.5, ease: EASE_OUT },
+  },
+};
+const DEFAULT_ROUTE_MOTION = {
+  initial: { opacity: 0, y: 10 },
+  exit: { opacity: 0, y: -8 },
+  transition: { duration: 0.32, ease: EASE_OUT },
+};
+
 function AnimatedRoutes() {
   const location = useLocation();
   const reduce = useReducedMotion();
+  const routeMotion = ROUTE_MOTION[location.pathname] || DEFAULT_ROUTE_MOTION;
   return (
     <AnimatePresence mode="wait">
       <motion.div
         key={location.pathname}
         className="route-frame"
-        initial={reduce ? { opacity: 0 } : { opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={reduce ? { opacity: 0 } : { opacity: 0, y: -8 }}
-        transition={{ duration: reduce ? 0.15 : 0.32, ease: EASE_OUT }}
+        initial={reduce ? { opacity: 0 } : routeMotion.initial}
+        animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+        exit={reduce ? { opacity: 0 } : routeMotion.exit}
+        transition={reduce ? { duration: 0.15, ease: EASE_OUT } : routeMotion.transition}
       >
         <Suspense fallback={<RouteFallback />}>
           <Routes location={location}>

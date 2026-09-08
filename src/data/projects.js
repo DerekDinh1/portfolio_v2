@@ -1,4 +1,4 @@
-export const PROJECTS = [
+const RAW_PROJECTS = [
   {
     name: "UVoice",
     what: "A tool that turns your writing voice into a reusable AI prompt.",
@@ -8,16 +8,19 @@ export const PROJECTS = [
     builtWith: ["Cursor", "Claude Code"],
     url: "https://github.com/DerekDinh1/uvoice",
     linkType: "source",
+    featured: true,
+    screenshot: null,
   },
   {
     name: "Between Us",
     what: "A two-player card game played in the browser.",
     problem: "Couples and close friends looking for a low-key way to connect.",
-    outcome: "Shipped a complete game loop with no backend — just HTML, CSS, and JS.",
+    outcome: "Shipped a complete game loop with no backend. Just HTML, CSS, and JS.",
     tech: ["HTML", "JS"],
     builtWith: ["Cursor", "Claude Code"],
     url: "https://derekdinh1.github.io/betweenus/",
     linkType: "live",
+    loadScreenshot: () => import("../assets/projects/between-us.jpg"),
   },
   {
     name: "Auction War Room",
@@ -28,26 +31,29 @@ export const PROJECTS = [
     builtWith: ["Cursor", "Claude Code"],
     url: "https://derekdinh1.github.io/auction-war-room/",
     linkType: "live",
+    loadScreenshot: () => import("../assets/projects/auction-war-room.jpg"),
   },
   {
     name: "Laminar Focus",
     what: "A lightweight coach for getting into deep work.",
     problem: "Knowledge workers who lose momentum switching between tasks.",
-    outcome: "Deployed on Cloudflare with session state in Supabase — my first edge + DB combo.",
+    outcome: "Deployed on Cloudflare with session state in Supabase. My first edge + DB combo.",
     tech: ["JavaScript", "Cloudflare", "Supabase"],
     builtWith: ["Cursor", "Claude Code"],
     url: "https://laminarfocus.com",
     linkType: "live",
+    loadScreenshot: () => import("../assets/projects/laminar-focus.jpg"),
   },
   {
     name: "Dayview",
     what: "A single-page daily dashboard with live weather.",
     problem: "Anyone who opens five tabs every morning just to see what's ahead.",
-    outcome: "Learned to pull live weather APIs without a backend — pure client-side.",
+    outcome: "Learned to pull live weather APIs without a backend. Pure client-side.",
     tech: ["JavaScript"],
     builtWith: ["Cursor", "Claude Code"],
     url: "https://derekdinh1.github.io/dayview/",
     linkType: "live",
+    loadScreenshot: () => import("../assets/projects/dayview.jpg"),
   },
   {
     name: "TradesXP",
@@ -58,8 +64,14 @@ export const PROJECTS = [
     builtWith: ["Cursor", "Claude Code"],
     url: "https://tradesxp.com",
     linkType: "live",
+    loadScreenshot: () => import("../assets/projects/tradesxp.jpg"),
   },
 ];
+
+export const PROJECTS = RAW_PROJECTS.map((p) => ({
+  ...p,
+  status: p.linkType === "source" ? "source" : "live",
+}));
 
 export const TECH_KIND = {
   HTML: "stack",
