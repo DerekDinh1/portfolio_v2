@@ -29,7 +29,7 @@ import {
   STARTERS,
   INTRO,
 } from "./data/index.js";
-import { CAN_PLAY_WEBM_ALPHA, loadTitlePosters, loadTitleVideos } from "./lib/media.js";
+import { loadTitlePosters, loadTitleVideos } from "./lib/media.js";
 import {
   EASE_OUT,
   SeamlessAmbienceVideo,
@@ -306,9 +306,15 @@ function StarterSelect() {
         const img = new Image();
         img.src = mod.default;
       });
-      // Warm the hi loop so the first pop isn't waiting on decode. WebKit never
-      // plays these sprites, so don't spend mobile bandwidth fetching them.
-      if (CAN_PLAY_WEBM_ALPHA) s.loadHi?.().catch(() => {});
+      // Warm the hi + idle loops so the first pop isn't waiting on decode.
+      s.loadHi?.().then((mod) => {
+        const img = new Image();
+        img.src = mod.default;
+      }).catch(() => {});
+      s.loadIdle?.().then((mod) => {
+        const img = new Image();
+        img.src = mod.default;
+      }).catch(() => {});
     });
     const pending = timers.current;
     return () => {

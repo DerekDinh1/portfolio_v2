@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { CONTACT, CONTACT_BLURB, STATS } from "./data/index.js";
 import { EXP_VISIBLE_DEFAULT } from "./data/professional.js";
-import { CAN_PLAY_WEBM_ALPHA } from "./lib/media.js";
 
 export const TITLE_AMBIENCE_RATE = 0.45;
 export const TITLE_AMBIENCE_CROSSFADE_WALL_S = 1.75;
@@ -181,12 +180,13 @@ export function SeamlessAmbienceVideo({ src, poster, className, active }) {
 }
 
 // loop: "idle" | "hi" | "sleep" (sleep falls back to idle if the starter has no sleep asset)
+// Animated WebP loops (true alpha). Magenta-keyed MOV/WebM are not used — Safari
+// paints their matte as a solid pink square, and the WebMs are opaque pink too.
 export function MascotSprite({ starter, loop = "idle", className, alt, playOnce = false, onEnded }) {
   const reduce = useReducedMotion();
-  const videoRef = useRef(null);
   const [failed, setFailed] = useState(false);
-  const [imgSrc, setImgSrc] = useState(null);
-  const [webmSrc, setWebmSrc] = useState(null);
+  const [stillSrc, setStillSrc] = useState(null);
+  const [animSrc, setAnimSrc] = useState(null);
 
   const hasSleepAsset = !!starter.loadSleep;
   const effectiveLoop = loop === "sleep" && !hasSleepAsset ? "idle" : loop;
@@ -196,7 +196,7 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
     starter
       .loadImg()
       .then((mod) => {
-        if (!cancelled) setImgSrc(mod.default);
+        if (!cancelled) setStillSrc(mod.default);
       })
       .catch(() => {});
     return () => {
@@ -206,27 +206,26 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
 
   useEffect(() => {
     setFailed(false);
-    // Only WebM loops with real VP9 alpha. WebKit/iOS must use the transparent
-    // PNG — they may claim WebM support but still paint magenta RGB without alpha.
-    if (reduce || !CAN_PLAY_WEBM_ALPHA) return undefined;
+    setAnimSrc(null);
+    if (reduce) return undefined;
 
     let cancelled = false;
-    const webmLoader =
+    const animLoader =
       effectiveLoop === "hi" ? starter.loadHi : effectiveLoop === "sleep" ? starter.loadSleep : starter.loadIdle;
 
-    if (!webmLoader) {
+    if (!animLoader) {
       setFailed(true);
       return undefined;
     }
 
-    webmLoader()
+    animLoader()
       .then((mod) => {
         if (cancelled) return;
         if (!mod?.default) {
           setFailed(true);
           return;
         }
-        setWebmSrc(mod.default);
+        setAnimSrc(mod.default);
       })
       .catch(() => {
         if (!cancelled) setFailed(true);
@@ -237,54 +236,30 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
     };
   }, [starter, effectiveLoop, reduce]);
 
-  // Only force a reload when the loop clip changes, not on the initial source attach
-  // (autoPlay handles the first play). Reloading on first attach caused a visible hitch.
-  const loopRef = useRef(effectiveLoop);
   useEffect(() => {
-    const v = videoRef.current;
-    if (!v || !webmSrc) return undefined;
-    if (loopRef.current === effectiveLoop) {
-      const play = v.play();
-      if (play && typeof play.catch === "function") play.catch(() => {});
-      return undefined;
-    }
-    loopRef.current = effectiveLoop;
-    v.load();
-    const play = v.play();
-    if (play && typeof play.catch === "function") play.catch(() => {});
-    return undefined;
-  }, [webmSrc, effectiveLoop, playOnce]);
+    if (!playOnce || !animSrc || reduce || failed) return undefined;
+    const t = window.setTimeout(() => {
+      if (typeof onEnded === "function") onEnded();
+    }, 5200);
+    return () => window.clearTimeout(t);
+  }, [playOnce, animSrc, reduce, failed, onEnded]);
 
-  if (!imgSrc) {
+  if (!stillSrc) {
     return <span className={className} role="img" aria-label={alt} />;
   }
 
-  const canAnimate = !reduce && !failed && CAN_PLAY_WEBM_ALPHA && webmSrc;
-  if (!canAnimate) {
-    return <img className={className} src={imgSrc} alt={alt} loading="lazy" />;
-  }
+  const src = !reduce && !failed && animSrc ? animSrc : stillSrc;
 
   return (
-    <video
-      ref={videoRef}
+    <img
       className={className}
-      poster={imgSrc}
-      autoPlay
-      loop={!playOnce}
-      muted
-      playsInline
-      aria-label={alt}
-      onLoadedMetadata={(e) => {
-        e.currentTarget.playbackRate = 1.15;
-        e.currentTarget.defaultPlaybackRate = 1.15;
-      }}
-      onEnded={() => {
-        if (playOnce && typeof onEnded === "function") onEnded();
-      }}
+      src={src}
+      alt={alt}
+      loading="eager"
+      decoding="async"
+      fetchPriority="high"
       onError={() => setFailed(true)}
-    >
-      <source src={webmSrc} type="video/webm" />
-    </video>
+    />
   );
 }
 
