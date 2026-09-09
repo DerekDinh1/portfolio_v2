@@ -277,15 +277,13 @@ function ProjectCard({ p, delay, active, onSelectShot }) {
 
 export default function Projects() {
   const starter = STARTERS[1];
-  const [mascotLoop, setMascotLoop] = useState("hi");
+  const [mascotLoop, setMascotLoop] = useState("idle");
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
   const hiTimer = useRef(null);
 
   useEffect(() => {
-    const t = setTimeout(() => setMascotLoop("idle"), 2000);
     return () => {
-      clearTimeout(t);
       if (hiTimer.current) clearTimeout(hiTimer.current);
     };
   }, []);

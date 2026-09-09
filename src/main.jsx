@@ -371,7 +371,7 @@ function StarterSelect() {
                     <MascotSprite
                       starter={s}
                       loop="hi"
-                      className={`starter-img${popping || open ? " emerging" : ""}`}
+                      className={`starter-img${popping ? " emerging" : ""}`}
                       alt={s.name}
                     />
                   </div>
