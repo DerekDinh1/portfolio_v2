@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { CONTACT, CONTACT_BLURB, STATS } from "./data/index.js";
 import { EXP_VISIBLE_DEFAULT } from "./data/professional.js";
-import { CAN_PLAY_WEBM } from "./lib/media.js";
+import { CAN_PLAY_WEBM_ALPHA } from "./lib/media.js";
 
 export const TITLE_AMBIENCE_RATE = 0.45;
 export const TITLE_AMBIENCE_CROSSFADE_WALL_S = 1.75;
@@ -206,10 +206,9 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
 
   useEffect(() => {
     setFailed(false);
-    // Only WebM loops have real alpha. HEVC .mov files are magenta-keyed and must
-    // not be shown as raw <video> (pink square). Canvas chroma-key froze iOS, so
-    // Safari/Brave iOS fall back to the transparent PNG still.
-    if (reduce || !CAN_PLAY_WEBM) return undefined;
+    // Only WebM loops with real VP9 alpha. WebKit/iOS must use the transparent
+    // PNG — they may claim WebM support but still paint magenta RGB without alpha.
+    if (reduce || !CAN_PLAY_WEBM_ALPHA) return undefined;
 
     let cancelled = false;
     const webmLoader =
@@ -260,7 +259,7 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
     return <span className={className} role="img" aria-label={alt} />;
   }
 
-  const canAnimate = !reduce && !failed && CAN_PLAY_WEBM && webmSrc;
+  const canAnimate = !reduce && !failed && CAN_PLAY_WEBM_ALPHA && webmSrc;
   if (!canAnimate) {
     return <img className={className} src={imgSrc} alt={alt} loading="lazy" />;
   }
