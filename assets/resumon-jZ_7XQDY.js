@@ -1,0 +1,1 @@
+var e=`/assets/resumon-BCQwaFcJ.png`;export{e as default};

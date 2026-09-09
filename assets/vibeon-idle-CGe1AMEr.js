@@ -1,0 +1,1 @@
+var e=`/assets/vibeon-idle-Zn-5r59R.webm`;export{e as default};

@@ -1,0 +1,1 @@
+var e=`/assets/resumon-idle-tB6hzItq.webm`;export{e as default};

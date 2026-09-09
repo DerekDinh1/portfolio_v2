@@ -1,0 +1,1 @@
+var e=`/assets/laminar-focus-CdK5aA52.jpg`;export{e as default};

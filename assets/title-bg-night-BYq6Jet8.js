@@ -1,0 +1,1 @@
+var e=`/assets/title-bg-night-DAk_vShU.mp4`;export{e as default};

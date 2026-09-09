@@ -1,0 +1,1 @@
+var e=`/assets/fire-night-B8ZhiqS9.jpg`;export{e as default};

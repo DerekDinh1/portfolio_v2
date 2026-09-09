@@ -1,0 +1,1 @@
+var e=`/assets/vibeon-PlgIqDQA.png`;export{e as default};

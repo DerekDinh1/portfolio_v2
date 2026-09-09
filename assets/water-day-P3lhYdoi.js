@@ -1,0 +1,1 @@
+var e=`/assets/water-day-MB4Zqp_x.jpg`;export{e as default};
