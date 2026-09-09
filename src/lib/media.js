@@ -6,9 +6,9 @@ export const CAN_PLAY_HEVC =
   typeof document !== "undefined" &&
   document.createElement("video").canPlayType('video/mp4; codecs="hvc1"') !== "";
 
-// WebM sprites ship with real VP9 alpha. HEVC .mov files are magenta-keyed and
-// must be drawn through canvas chroma-key (Safari/iOS) — not shown as raw video.
-export const CAN_PLAY_ALPHA_VIDEO = CAN_PLAY_WEBM || CAN_PLAY_HEVC;
+// Only VP9 WebM sprites have real alpha. Magenta-keyed HEVC .mov must not be
+// shown as raw video; iOS falls back to the transparent PNG still instead.
+export const CAN_PLAY_ALPHA_VIDEO = CAN_PLAY_WEBM;
 
 export function loadTitlePosters() {
   return Promise.all([

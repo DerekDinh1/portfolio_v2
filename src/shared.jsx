@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { CONTACT, CONTACT_BLURB, STATS } from "./data/index.js";
 import { EXP_VISIBLE_DEFAULT } from "./data/professional.js";
-import { CAN_PLAY_HEVC, CAN_PLAY_ALPHA_VIDEO } from "./lib/media.js";
+import { CAN_PLAY_WEBM } from "./lib/media.js";
 
 export const TITLE_AMBIENCE_RATE = 0.45;
 export const TITLE_AMBIENCE_CROSSFADE_WALL_S = 1.75;
@@ -181,39 +181,15 @@ export function SeamlessAmbienceVideo({ src, poster, className, active }) {
 }
 
 // loop: "idle" | "hi" | "sleep" (sleep falls back to idle if the starter has no sleep asset)
-/** Knock out the magenta chroma key used in HEVC mascot .mov files. */
-function keyMagentaFrame(imageData) {
-  const d = imageData.data;
-  for (let i = 0; i < d.length; i += 4) {
-    const r = d[i];
-    const g = d[i + 1];
-    const b = d[i + 2];
-    // Key color ~#E800F4: strong red+blue, very little green.
-    const chroma = Math.min(r, b) - g;
-    if (chroma > 130 && g < 120) {
-      d[i + 3] = 0;
-    } else if (chroma > 70 && g < 150) {
-      const t = (chroma - 70) / 60;
-      d[i + 3] = Math.min(d[i + 3], Math.round(255 * (1 - t)));
-    }
-  }
-  return imageData;
-}
-
 export function MascotSprite({ starter, loop = "idle", className, alt, playOnce = false, onEnded }) {
   const reduce = useReducedMotion();
   const videoRef = useRef(null);
-  const canvasRef = useRef(null);
   const [failed, setFailed] = useState(false);
   const [imgSrc, setImgSrc] = useState(null);
-  const [movSrc, setMovSrc] = useState(null);
   const [webmSrc, setWebmSrc] = useState(null);
 
-  const hasSleepAsset = !!(starter.loadSleep || starter.loadSleepMov);
+  const hasSleepAsset = !!starter.loadSleep;
   const effectiveLoop = loop === "sleep" && !hasSleepAsset ? "idle" : loop;
-  // Prefer real-alpha WebM. HEVC .mov stays magenta-keyed for Safari canvas path.
-  const useNativeWebm = Boolean(webmSrc) && CAN_PLAY_WEBM;
-  const useCanvasKey = !useNativeWebm && Boolean(movSrc) && CAN_PLAY_HEVC;
 
   useEffect(() => {
     let cancelled = false;
@@ -230,45 +206,32 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
 
   useEffect(() => {
     setFailed(false);
-    if (reduce || !CAN_PLAY_ALPHA_VIDEO) return undefined;
+    // Only WebM loops have real alpha. HEVC .mov files are magenta-keyed and must
+    // not be shown as raw <video> (pink square). Canvas chroma-key froze iOS, so
+    // Safari/Brave iOS fall back to the transparent PNG still.
+    if (reduce || !CAN_PLAY_WEBM) return undefined;
 
     let cancelled = false;
-    const movLoader =
-      effectiveLoop === "hi" ? starter.loadHiMov : effectiveLoop === "sleep" ? starter.loadSleepMov : starter.loadIdleMov;
     const webmLoader =
       effectiveLoop === "hi" ? starter.loadHi : effectiveLoop === "sleep" ? starter.loadSleep : starter.loadIdle;
 
-    const jobs = [];
-    // Only fetch HEVC when WebM alpha isn't available (Safari / iOS).
-    if (!CAN_PLAY_WEBM && CAN_PLAY_HEVC && movLoader) {
-      jobs.push(
-        movLoader()
-          .then((mod) => mod.default)
-          .catch(() => null)
-      );
-    } else {
-      jobs.push(Promise.resolve(null));
-    }
-    if (webmLoader) {
-      jobs.push(
-        webmLoader()
-          .then((mod) => mod.default)
-          .catch(() => null)
-      );
-    } else {
-      jobs.push(Promise.resolve(null));
+    if (!webmLoader) {
+      setFailed(true);
+      return undefined;
     }
 
-    Promise.all(jobs).then(([mov, webm]) => {
-      if (cancelled) return;
-      if (!mov && !webm) {
-        setFailed(true);
-        return;
-      }
-      // Swap only when the next clip is ready so the sprite doesn't blank mid-transition.
-      setMovSrc(mov);
-      setWebmSrc(webm);
-    });
+    webmLoader()
+      .then((mod) => {
+        if (cancelled) return;
+        if (!mod?.default) {
+          setFailed(true);
+          return;
+        }
+        setWebmSrc(mod.default);
+      })
+      .catch(() => {
+        if (!cancelled) setFailed(true);
+      });
 
     return () => {
       cancelled = true;
@@ -280,7 +243,7 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
   const loopRef = useRef(effectiveLoop);
   useEffect(() => {
     const v = videoRef.current;
-    if (!v || (!movSrc && !webmSrc)) return undefined;
+    if (!v || !webmSrc) return undefined;
     if (loopRef.current === effectiveLoop) {
       const play = v.play();
       if (play && typeof play.catch === "function") play.catch(() => {});
@@ -291,68 +254,27 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
     const play = v.play();
     if (play && typeof play.catch === "function") play.catch(() => {});
     return undefined;
-  }, [movSrc, webmSrc, effectiveLoop, playOnce]);
-
-  // Safari/iOS: paint HEVC frames to canvas and knock out the magenta key.
-  useEffect(() => {
-    if (!useCanvasKey) return undefined;
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    if (!video || !canvas) return undefined;
-
-    const ctx = canvas.getContext("2d", { willReadFrequently: true });
-    if (!ctx) return undefined;
-
-    let raf = 0;
-    let alive = true;
-
-    const draw = () => {
-      if (!alive) return;
-      if (video.readyState >= 2 && video.videoWidth) {
-        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-        }
-        ctx.drawImage(video, 0, 0);
-        try {
-          const frame = ctx.getImageData(0, 0, canvas.width, canvas.height);
-          ctx.putImageData(keyMagentaFrame(frame), 0, 0);
-        } catch {
-          // Tainted canvas — fall back to static art.
-          setFailed(true);
-          return;
-        }
-      }
-      raf = requestAnimationFrame(draw);
-    };
-
-    raf = requestAnimationFrame(draw);
-    return () => {
-      alive = false;
-      cancelAnimationFrame(raf);
-    };
-  }, [useCanvasKey, movSrc, effectiveLoop]);
+  }, [webmSrc, effectiveLoop, playOnce]);
 
   if (!imgSrc) {
     return <span className={className} role="img" aria-label={alt} />;
   }
 
-  const canAnimate = !reduce && !failed && CAN_PLAY_ALPHA_VIDEO && (useNativeWebm || useCanvasKey);
+  const canAnimate = !reduce && !failed && CAN_PLAY_WEBM && webmSrc;
   if (!canAnimate) {
     return <img className={className} src={imgSrc} alt={alt} loading="lazy" />;
   }
 
-  const video = (
+  return (
     <video
       ref={videoRef}
-      className={useCanvasKey ? "mascot-video-source" : className}
-      poster={useCanvasKey ? undefined : imgSrc}
+      className={className}
+      poster={imgSrc}
       autoPlay
       loop={!playOnce}
       muted
       playsInline
-      aria-hidden={useCanvasKey ? true : undefined}
-      aria-label={useCanvasKey ? undefined : alt}
+      aria-label={alt}
       onLoadedMetadata={(e) => {
         e.currentTarget.playbackRate = 1.15;
         e.currentTarget.defaultPlaybackRate = 1.15;
@@ -362,18 +284,8 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
       }}
       onError={() => setFailed(true)}
     >
-      {useNativeWebm ? <source src={webmSrc} type="video/webm" /> : null}
-      {useCanvasKey ? <source src={movSrc} type='video/mp4; codecs="hvc1"' /> : null}
+      <source src={webmSrc} type="video/webm" />
     </video>
-  );
-
-  if (!useCanvasKey) return video;
-
-  return (
-    <span className={`mascot-chroma ${className || ""}`.trim()}>
-      {video}
-      <canvas ref={canvasRef} className="mascot-chroma-canvas" role="img" aria-label={alt} />
-    </span>
   );
 }
 

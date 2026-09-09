@@ -1131,27 +1131,6 @@ html[data-time="night"] .hero-speech {
 video.hero-mascot {
   animation: none;
 }
-/* Safari/iOS HEVC path: hidden video + chroma-keyed canvas */
-.mascot-chroma {
-  display: inline-block;
-  line-height: 0;
-  background: transparent;
-}
-.mascot-video-source {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-.mascot-chroma-canvas {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  background: transparent;
-}
 @keyframes hero-float {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-10px); }

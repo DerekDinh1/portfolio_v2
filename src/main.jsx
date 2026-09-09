@@ -308,7 +308,6 @@ function StarterSelect() {
       });
       // Warm the hi loop so the first pop isn't waiting on decode.
       s.loadHi?.().catch(() => {});
-      s.loadHiMov?.().catch(() => {});
     });
     const pending = timers.current;
     return () => {
