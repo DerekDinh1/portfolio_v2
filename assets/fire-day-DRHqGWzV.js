@@ -1,0 +1,1 @@
+var e=`/assets/fire-day-Cvi8GeRj.jpg`;export{e as default};

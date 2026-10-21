@@ -1,0 +1,1 @@
+var e=`/assets/auction-war-room-Da96DL1j.jpg`;export{e as default};

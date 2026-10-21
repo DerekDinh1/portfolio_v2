@@ -1,0 +1,1 @@
+var e=`/assets/grass-day-Cq5hOw1k.jpg`;export{e as default};

@@ -1,0 +1,1 @@
+var e=`/assets/buildasaur-JXtn8zqg.webp`;export{e as default};

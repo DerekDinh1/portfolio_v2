@@ -1,0 +1,1 @@
+var e=`/assets/vibeon-idle-DNhSW--8.webp`;export{e as default};

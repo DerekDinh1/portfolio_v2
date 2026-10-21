@@ -1,0 +1,1 @@
+var e=`/assets/tradesxp-GHBamqMf.jpg`;export{e as default};

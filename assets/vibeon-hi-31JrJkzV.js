@@ -1,0 +1,1 @@
+var e=`/assets/vibeon-hi-BIRq1T8r.webp`;export{e as default};
