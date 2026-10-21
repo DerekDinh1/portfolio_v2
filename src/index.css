@@ -294,7 +294,6 @@ html[data-time="night"] .btn-red.btn-pop:hover {
 .nav-item:focus-visible { outline-offset: 2px; }
 .nav .btn { padding: 6px 14px; font-size: 0.82rem; }
 .nav-cta { color: var(--red-fg); }
-.nav-cta-mobile { display: none; }
 .nav-toggle {
   display: none;
   background: none;
@@ -796,7 +795,8 @@ video.starter-img.emerging {
   border-top-color: var(--line);
   display: grid;
   place-items: center;
-  min-height: 320px;
+  /* match the opened card so revealing one starter doesn't shove its row-mates down */
+  min-height: 400px;
 }
 .starter-card.opening,
 .starter-card.popping {
@@ -804,7 +804,7 @@ video.starter-img.emerging {
 }
 .starter-card.popping {
   /* match open layout so the mascot never jumps when details fade in */
-  min-height: 320px;
+  min-height: 400px;
 }
 .pokeball-btn {
   position: relative;
@@ -1234,7 +1234,7 @@ html[data-time="night"] .hero-speech {
 .exp-row { padding: 20px 0; border-top: 1px solid var(--line); }
 .exp-row:first-child { border-top: none; }
 .exp-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.exp-when { font-family: var(--pixel); font-size: 0.7rem; letter-spacing: 0.04em; color: var(--accent-text); white-space: nowrap; }
+.exp-when { font-family: var(--pixel); font-size: 0.76rem; letter-spacing: 0.04em; color: var(--accent-text); white-space: nowrap; }
 .exp-org { font-weight: 600; font-size: 1.08rem; display: inline-flex; align-items: center; gap: 8px; }
 .exp-role { color: var(--muted); }
 .exp-latest {
@@ -1286,6 +1286,7 @@ html[data-time="night"] .hero-speech {
 .chip { background: var(--accent-soft); color: var(--accent-ink); border-radius: 999px; padding: 5px 12px; font-size: 0.82rem; font-weight: 500; }
 
 /* education */
+.edu + .edu { margin-top: 20px; }
 .edu-school { font-weight: 600; font-size: 1.1rem; }
 .edu-degree { margin-top: 4px; }
 .edu-minors { color: var(--muted); }
@@ -1621,7 +1622,11 @@ html[data-time="night"] .badge {
 /* ---------- responsive ---------- */
 @media (max-width: 820px) {
   .starter-grid { grid-template-columns: 1fr; max-width: 380px; margin-inline: auto; }
+  /* stacked cards have no row-mates to shift, so keep the closed balls compact */
+  .starter-card.closed,
+  .starter-card.opening { min-height: 300px; }
   .hero-inner { grid-template-columns: 1fr; text-align: center; }
+  .hero-cta-row { justify-content: center; }
   .hero-art { order: -1; }
   .hero::after {
     background: linear-gradient(
@@ -1654,8 +1659,9 @@ html[data-time="night"] .badge {
     padding: 4px 6px;
   }
   .nav-toggle { display: inline-flex; }
-  .nav-end { display: none; }
-  .nav-cta-mobile { display: inline-flex; margin-top: 6px; justify-content: center; }
+  /* keep "Get in touch" one tap away instead of buried in the menu */
+  .nav-end { border-left: 0; padding-left: 0; }
+  .nav .nav-end .btn { padding: 6px 12px; font-size: 0.78rem; }
   .wordmark { font-size: 0.92rem; }
   .nav .time-label { display: none; }
   .nav .time-toggle { padding-right: 2px; }
