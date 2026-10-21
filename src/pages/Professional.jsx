@@ -63,6 +63,9 @@ export default function Professional() {
         }}
       >
         <div className="hero-cta-row">
+          <a className="btn btn-red btn-pop" href={RESUME_PDF} download>
+            Download résumé
+          </a>
           <span className="availability-chip">
             <span className="availability-dot" aria-hidden="true" />
             Open to senior IT · automation · AI ops
@@ -128,14 +131,16 @@ export default function Professional() {
 
         <Reveal className="block" as="section" preset="flow">
           <h2 className="block-h">Education</h2>
-          <div className="edu">
-            <div className="edu-head">
-              <div className="edu-school">{EDUCATION.school}</div>
-              <span className="exp-when">{EDUCATION.year}</span>
+          {EDUCATION.map((e) => (
+            <div className="edu" key={e.school}>
+              <div className="edu-head">
+                <div className="edu-school">{e.school}</div>
+                <span className="exp-when">{e.year}</span>
+              </div>
+              <div className="edu-degree">{e.degree}</div>
+              {e.minors ? <div className="edu-minors">{e.minors}</div> : null}
             </div>
-            <div className="edu-degree">{EDUCATION.degree}</div>
-            <div className="edu-minors">{EDUCATION.minors}</div>
-          </div>
+          ))}
         </Reveal>
       </div>
       <Contact variant="professional" />

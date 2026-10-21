@@ -195,7 +195,6 @@ function Nav() {
             <NavLink to="/professional" onClick={close} className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}>Professional</NavLink>
             <NavLink to="/projects" onClick={close} className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}>Projects</NavLink>
             <NavLink to="/personal" onClick={close} className={({ isActive }) => `nav-item${isActive ? " on" : ""}`}>Personal</NavLink>
-            <a className="btn btn-red nav-cta nav-cta-mobile" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer" onClick={close}>Get in touch</a>
           </nav>
           <div className="nav-end">
             <a className="btn btn-red nav-cta" href={CONTACT.linkedin} target="_blank" rel="noopener noreferrer">Get in touch</a>
@@ -300,21 +299,24 @@ function StarterSelect() {
   const reduce = useReducedMotion();
   const timers = useRef([]);
 
+  const warmed = useRef(new Set());
+  // Warm a starter's "hi" loop once the visitor shows intent (hover, focus,
+  // press) instead of pulling every animated loop on page load.
+  const warm = (s) => {
+    if (reduce || warmed.current.has(s.slug)) return;
+    warmed.current.add(s.slug);
+    s.loadHi?.().then((mod) => {
+      const img = new Image();
+      img.src = mod.default;
+    }).catch(() => {});
+  };
+
   useEffect(() => {
     STARTERS.forEach((s) => {
       s.loadImg().then((mod) => {
         const img = new Image();
         img.src = mod.default;
       });
-      // Warm the hi + idle loops so the first pop isn't waiting on decode.
-      s.loadHi?.().then((mod) => {
-        const img = new Image();
-        img.src = mod.default;
-      }).catch(() => {});
-      s.loadIdle?.().then((mod) => {
-        const img = new Image();
-        img.src = mod.default;
-      }).catch(() => {});
     });
     const pending = timers.current;
     return () => {
@@ -324,6 +326,8 @@ function StarterSelect() {
 
   const reveal = (slug) => {
     if (revealed[slug]) return;
+    const starter = STARTERS.find((s) => s.slug === slug);
+    if (starter) warm(starter);
     if (reduce) {
       setRevealed((r) => ({ ...r, [slug]: true }));
       return;
@@ -396,6 +400,9 @@ function StarterSelect() {
                   type="button"
                   className={`pokeball-btn${opening ? " wobbling" : ""}`}
                   onClick={() => reveal(s.slug)}
+                  onPointerEnter={() => warm(s)}
+                  onPointerDown={() => warm(s)}
+                  onFocus={() => warm(s)}
                   disabled={opening}
                   aria-label={`Open ${s.name}, the ${s.type}-type starter`}
                 >

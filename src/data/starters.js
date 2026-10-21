@@ -5,7 +5,7 @@ export const STARTERS = [
     dex: "No. 001",
     type: "Water",
     theme: "water",
-    loadImg: () => import("../assets/mascots/resumon.png"),
+    loadImg: () => import("../assets/mascots/resumon.webp"),
     loadHi: () => import("../assets/mascots/resumon-hi.webp"),
     loadIdle: () => import("../assets/mascots/resumon-idle.webp"),
     loadBackdrop: (night) =>
@@ -21,7 +21,7 @@ export const STARTERS = [
     dex: "No. 002",
     type: "Fire",
     theme: "fire",
-    loadImg: () => import("../assets/mascots/buildasaur.png"),
+    loadImg: () => import("../assets/mascots/buildasaur.webp"),
     loadHi: () => import("../assets/mascots/buildasaur-hi.webp"),
     loadIdle: () => import("../assets/mascots/buildasaur-idle.webp"),
     loadBackdrop: (night) =>
@@ -37,7 +37,7 @@ export const STARTERS = [
     dex: "No. 003",
     type: "Grass",
     theme: "grass",
-    loadImg: () => import("../assets/mascots/vibeon.png"),
+    loadImg: () => import("../assets/mascots/vibeon.webp"),
     loadHi: () => import("../assets/mascots/vibeon-hi.webp"),
     loadIdle: () => import("../assets/mascots/vibeon-idle.webp"),
     loadBackdrop: (night) =>

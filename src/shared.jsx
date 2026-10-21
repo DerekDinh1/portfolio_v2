@@ -204,9 +204,10 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
     };
   }, [starter]);
 
+  // Keep showing the current loop until the next one has decoded, so swapping
+  // idle <-> hi never flashes the (differently posed) still in between.
   useEffect(() => {
     setFailed(false);
-    setAnimSrc(null);
     if (reduce) return undefined;
 
     let cancelled = false;
@@ -225,7 +226,12 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
           setFailed(true);
           return;
         }
-        setAnimSrc(mod.default);
+        const img = new Image();
+        img.src = mod.default;
+        const show = () => {
+          if (!cancelled) setAnimSrc(mod.default);
+        };
+        (img.decode ? img.decode() : Promise.resolve()).then(show, show);
       })
       .catch(() => {
         if (!cancelled) setFailed(true);

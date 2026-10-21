@@ -4,7 +4,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { STARTERS, PROJECTS, CONTACT, groupTech } from "../data/index.js";
 import { PageHero, Reveal, Contact } from "../shared.jsx";
 
-const AUTO_MS = 3500;
+const AUTO_MS = 6000;
+
+// Name the destination so each link makes sense on its own.
+function primaryLinkLabel(url) {
+  return /github\.com/.test(url) ? "View on GitHub" : "Visit site";
+}
 
 function useProjectShot(project) {
   const [shot, setShot] = useState(null);
@@ -165,7 +170,7 @@ function AppCarousel({
             target="_blank"
             rel="noopener noreferrer"
           >
-            Link →
+            {primaryLinkLabel(current.url)} →
           </a>
           {current.moreLinks?.map((link) => (
             <a
@@ -191,7 +196,7 @@ function AppCarousel({
               className="app-carousel-dot"
               aria-selected={i === index}
               aria-label={p.name}
-              onClick={() => go(i, i > index ? 1 : -1)}
+              onClick={() => go(i, i > index ? 1 : -1, { fromArrow: true })}
             />
           ))}
         </div>
@@ -257,7 +262,7 @@ function ProjectCard({ p, delay, active, onSelectShot }) {
           rel="noopener noreferrer"
           onClick={(e) => e.stopPropagation()}
         >
-          Link →
+          {primaryLinkLabel(p.url)} →
         </a>
         {p.moreLinks?.map((link) => (
           <a
@@ -308,7 +313,8 @@ export default function Projects() {
     [carouselProjects]
   );
 
-  const resumeAutoplay = useCallback(() => setAutoplay(true), []);
+  // Once a visitor steers the carousel, stop auto-advancing under them.
+  const stopAutoplay = useCallback(() => setAutoplay(false), []);
 
   const onMascotActivate = useCallback(() => {
     setMascotLoop("hi");
@@ -354,7 +360,7 @@ export default function Projects() {
               index={carouselIndex}
               onIndexChange={setCarouselIndex}
               autoplay={autoplay}
-              onArrowNav={resumeAutoplay}
+              onArrowNav={stopAutoplay}
             />
           ) : null}
 
