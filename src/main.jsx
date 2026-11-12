@@ -299,18 +299,6 @@ function StarterSelect() {
   const reduce = useReducedMotion();
   const timers = useRef([]);
 
-  const warmed = useRef(new Set());
-  // Warm a starter's "hi" loop once the visitor shows intent (hover, focus,
-  // press) instead of pulling every animated loop on page load.
-  const warm = (s) => {
-    if (reduce || warmed.current.has(s.slug)) return;
-    warmed.current.add(s.slug);
-    s.loadHi?.().then((mod) => {
-      const img = new Image();
-      img.src = mod.default;
-    }).catch(() => {});
-  };
-
   useEffect(() => {
     STARTERS.forEach((s) => {
       s.loadImg().then((mod) => {
@@ -326,8 +314,6 @@ function StarterSelect() {
 
   const reveal = (slug) => {
     if (revealed[slug]) return;
-    const starter = STARTERS.find((s) => s.slug === slug);
-    if (starter) warm(starter);
     if (reduce) {
       setRevealed((r) => ({ ...r, [slug]: true }));
       return;
@@ -400,9 +386,6 @@ function StarterSelect() {
                   type="button"
                   className={`pokeball-btn${opening ? " wobbling" : ""}`}
                   onClick={() => reveal(s.slug)}
-                  onPointerEnter={() => warm(s)}
-                  onPointerDown={() => warm(s)}
-                  onFocus={() => warm(s)}
                   disabled={opening}
                   aria-label={`Open ${s.name}, the ${s.type}-type starter`}
                 >
@@ -572,7 +555,7 @@ function Home() {
 }
 
 // Per-route enter variants echo each starter's habitat: a soft rise for
-// water, a quick pop for fire, a gentle rotate-in for grass. Everything
+// water, a quick pop for fire, a gentle settle-in for grass. Everything
 // else (home, 404) keeps the original fade/slide.
 const ROUTE_MOTION = {
   "/professional": {
@@ -586,8 +569,8 @@ const ROUTE_MOTION = {
     transition: { duration: 0.28, ease: "easeOut" },
   },
   "/personal": {
-    initial: { opacity: 0, rotate: -1.5, y: 10 },
-    exit: { opacity: 0, rotate: 1.5, y: -8 },
+    initial: { opacity: 0, scale: 0.985, y: 12 },
+    exit: { opacity: 0, scale: 0.985, y: -8 },
     transition: { duration: 0.5, ease: EASE_OUT },
   },
 };
@@ -607,7 +590,7 @@ function AnimatedRoutes() {
         key={location.pathname}
         className="route-frame"
         initial={reduce ? { opacity: 0 } : routeMotion.initial}
-        animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={reduce ? { opacity: 0 } : routeMotion.exit}
         transition={reduce ? { duration: 0.15, ease: EASE_OUT } : routeMotion.transition}
       >

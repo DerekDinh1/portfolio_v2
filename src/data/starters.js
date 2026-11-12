@@ -6,8 +6,6 @@ export const STARTERS = [
     type: "Water",
     theme: "water",
     loadImg: () => import("../assets/mascots/resumon.webp"),
-    loadHi: () => import("../assets/mascots/resumon-hi.webp"),
-    loadIdle: () => import("../assets/mascots/resumon-idle.webp"),
     loadBackdrop: (night) =>
       night
         ? import("../assets/habitats/water-night.jpg")
@@ -22,8 +20,6 @@ export const STARTERS = [
     type: "Fire",
     theme: "fire",
     loadImg: () => import("../assets/mascots/buildasaur.webp"),
-    loadHi: () => import("../assets/mascots/buildasaur-hi.webp"),
-    loadIdle: () => import("../assets/mascots/buildasaur-idle.webp"),
     loadBackdrop: (night) =>
       night
         ? import("../assets/habitats/fire-night.jpg")
@@ -38,8 +34,6 @@ export const STARTERS = [
     type: "Grass",
     theme: "grass",
     loadImg: () => import("../assets/mascots/vibeon.webp"),
-    loadHi: () => import("../assets/mascots/vibeon-hi.webp"),
-    loadIdle: () => import("../assets/mascots/vibeon-idle.webp"),
     loadBackdrop: (night) =>
       night
         ? import("../assets/habitats/grass-night.jpg")

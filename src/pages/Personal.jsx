@@ -20,6 +20,38 @@ function shuffleIndices(length, avoidFirst = null) {
   return indices;
 }
 
+// Phones only show the first few picks per group; the rest sit behind a toggle
+// so the list doesn't run for screens. Wider layouts always show everything.
+const REC_PREVIEW = 3;
+
+function RecGroup({ group, delay }) {
+  const [expanded, setExpanded] = useState(false);
+  const extra = group.items.length - REC_PREVIEW;
+  return (
+    <Reveal className={`rec-group${expanded ? " expanded" : ""}`} delay={delay} preset="sway">
+      <h3 className="rec-group-h">{group.kind}</h3>
+      <ul className="rec-list">
+        {group.items.map((item, i) => (
+          <li key={item.name} className={i >= REC_PREVIEW ? "rec-extra" : undefined}>
+            <span className="rec-item-name">{item.name}</span>
+            <span className="rec-item-blurb">{item.blurb}</span>
+          </li>
+        ))}
+      </ul>
+      {extra > 0 ? (
+        <button
+          type="button"
+          className="exp-more rec-more"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((v) => !v)}
+        >
+          {expanded ? "Show less" : `Show more (${extra})`}
+        </button>
+      ) : null}
+    </Reveal>
+  );
+}
+
 export default function Personal() {
   const starter = STARTERS[2];
   const reduce = useReducedMotion();
@@ -147,17 +179,7 @@ export default function Personal() {
           </p>
           <div className="rec-groups">
             {RECOMMENDATIONS.map((group, gi) => (
-              <Reveal className="rec-group" key={group.kind} delay={gi * 0.05} preset="sway">
-                <h3 className="rec-group-h">{group.kind}</h3>
-                <ul className="rec-list">
-                  {group.items.map((item) => (
-                    <li key={item.name}>
-                      <span className="rec-item-name">{item.name}</span>
-                      <span className="rec-item-blurb">{item.blurb}</span>
-                    </li>
-                  ))}
-                </ul>
-              </Reveal>
+              <RecGroup group={group} key={group.kind} delay={gi * 0.05} />
             ))}
           </div>
         </Reveal>
