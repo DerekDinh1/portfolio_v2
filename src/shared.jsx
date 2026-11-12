@@ -53,7 +53,9 @@ export function Reveal({ children, className = "", as = "div", delay = 0, preset
       className={className}
       initial={initial}
       whileInView={whileInView}
-      viewport={{ once: true, amount: 0.2 }}
+      // Reveal as soon as the block's top edge is 8% into the viewport. A 20%
+      // threshold left tall sections (Experience) blank for most of a screen.
+      viewport={{ once: true, amount: "some", margin: "0px 0px -8% 0px" }}
       transition={{ duration: reduce ? 0 : duration, delay: reduce ? 0 : delay, ease }}
       {...rest}
     >
@@ -64,7 +66,7 @@ export function Reveal({ children, className = "", as = "div", delay = 0, preset
 
 // Tracks html[data-time] so components outside main.jsx's TimeProvider
 // (e.g. habitat backdrops) can react to day/night without a circular import.
-function useIsNight() {
+export function useIsNight() {
   const [night, setNight] = useState(
     () => typeof document !== "undefined" && document.documentElement.dataset.time === "night"
   );

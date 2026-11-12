@@ -12,6 +12,23 @@ export const STARTERS = [
         : import("../assets/habitats/water-day.jpg"),
     tagline: "9+ year IT professional. Non-generative human just trying to be friends with AI before it takes over the world.",
     blurb: "Experience, automation, and integrations.",
+    // Battle-scene hero data (see src/game/BattleHero.jsx).
+    battle: {
+      habitat: "water",
+      sprite: "resumon",
+      level: 9, // 9+ years in IT
+      bar: {
+        label: "EXP",
+        value: 67, // 9 years 8 months in IT (since Mar 2017): two-thirds of the way to Lv 10
+        text: "Over 9 years of IT experience, on the way to 10",
+      },
+      status: {
+        tag: "OPEN",
+        text: "Open to senior IT, automation and AI ops roles",
+      },
+      message: "RESUMON is on duty. Where to?",
+      greetMessage: "RESUMON waves its clipboard. Want the résumé?",
+    },
   },
   {
     slug: "projects",

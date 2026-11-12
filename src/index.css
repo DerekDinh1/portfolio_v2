@@ -316,8 +316,9 @@ html[data-time="night"] .btn-red.btn-pop:hover {
 .nav .time-toggle:hover,
 .nav .time-toggle:focus-visible { opacity: 1; }
 .nav .time-track { width: 42px; height: 22px; border-width: 2px; }
-.nav .time-knob { width: 16px; height: 16px; }
-.nav .time-toggle.night .time-knob { transform: translateX(18px); }
+/* track is 38x18 inside its border: a 14px knob leaves an even 2px gap on every side */
+.nav .time-knob { width: 14px; height: 14px; }
+.nav .time-toggle.night .time-knob { transform: translateX(20px); }
 .nav .time-star.s1 { left: 7px; top: 5px; }
 .nav .time-star.s2 { left: 15px; top: 11px; }
 .nav .time-star.s3 { left: 10px; top: 15px; }
@@ -429,6 +430,17 @@ html[data-time="night"] .btn-red.btn-pop:hover {
   background:
     radial-gradient(120% 80% at 50% 0%, var(--accent-soft), transparent 60%),
     repeating-linear-gradient(0deg, transparent 0 26px, var(--scanline) 26px 27px);
+}
+/* trainer portrait: 64px art shown at an exact 4x (3x on phones) so pixels stay square */
+.intro-trainer {
+  width: 256px;
+  height: 256px;
+  image-rendering: pixelated;
+  user-select: none;
+  margin-bottom: -14px;
+}
+@media (max-width: 480px) {
+  .intro-trainer { width: 192px; height: 192px; }
 }
 .dialogue {
   position: relative;
@@ -1241,6 +1253,10 @@ html[data-time="night"] .hero-speech {
   font-size: 1.12rem;
   line-height: 1.65;
   color: var(--ink);
+}
+.career-throughline .career-tagline {
+  font-weight: 600;
+  margin-bottom: 0.6em;
 }
 
 /* stats */

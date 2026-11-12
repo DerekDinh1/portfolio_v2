@@ -30,6 +30,7 @@ import {
   INTRO,
 } from "./data/index.js";
 import { loadTitlePosters, loadTitleVideos } from "./lib/media.js";
+import trainerProfile from "./assets/sprites/trainer/profile.png";
 import {
   EASE_OUT,
   SeamlessAmbienceVideo,
@@ -463,6 +464,14 @@ function IntroDialogue({ step, setStep, onChoose }) {
 
   return (
     <section className="intro-stage">
+      <img
+        className="intro-trainer"
+        src={trainerProfile}
+        width={64}
+        height={64}
+        alt="Derek as a pixel-art trainer: spiky black hair, glasses, teal hoodie and a backpack"
+        draggable={false}
+      />
       <AnimatePresence mode="wait">
         <motion.div
           key={cardKey}
