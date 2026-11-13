@@ -88,7 +88,7 @@ export default function Personal() {
         sprite={battle.sprite}
         level={RECS.length}
         bar={{
-          label: "PICKS",
+          label: "EXP",
           value: Math.round((seen / RECS.length) * 100),
           text: `${seen} of ${RECS.length} picks seen this visit`,
         }}

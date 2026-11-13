@@ -15,9 +15,12 @@ export default function SpriteSheet({ slug, className = "", ref }) {
 
   useImperativeHandle(ref, () => ({ play: (name) => engine.current?.play(name) }), []);
 
+  // Safari fires `load` for a cached sheet before this effect runs, so read the
+  // image here instead of clearing the size and waiting for an event that already happened.
   useEffect(() => {
-    setDims(null);
-    setFailed(false);
+    const img = imgRef.current;
+    setFailed(Boolean(img?.complete && !img.naturalWidth));
+    setDims(img?.complete && img.naturalWidth ? { w: img.naturalWidth, h: img.naturalHeight } : null);
   }, [slug]);
 
   useEffect(() => {

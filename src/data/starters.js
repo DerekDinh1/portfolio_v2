@@ -43,7 +43,7 @@ export const STARTERS = [
         : import("../assets/habitats/fire-day.jpg"),
     tagline: "Small apps I build after hours.",
     blurb: "Projects, straight from GitHub.",
-    // Battle-scene hero data. Level and the LIVE bar are counted from PROJECTS on the page.
+    // Battle-scene hero data. Level and the EXP bar (share of projects that are live) are counted from PROJECTS on the page.
     battle: {
       habitat: "fire",
       sprite: "buildasaur",
@@ -68,7 +68,7 @@ export const STARTERS = [
         : import("../assets/habitats/grass-day.jpg"),
     tagline: "Anime, golf, games, and Colorado trails.",
     blurb: "The person behind the tickets.",
-    // Battle-scene hero data. Level and the PICKS bar are counted from RECS on the page.
+    // Battle-scene hero data. Level and the EXP bar (picks seen this visit) are counted from RECS on the page.
     battle: {
       habitat: "grass",
       sprite: "vibeon",

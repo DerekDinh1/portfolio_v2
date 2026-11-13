@@ -326,7 +326,7 @@ export default function Projects() {
         sprite={battle.sprite}
         level={PROJECTS.length}
         bar={{
-          label: "LIVE",
+          label: "EXP",
           value: Math.round((liveCount / PROJECTS.length) * 100),
           text: `${liveCount} of ${PROJECTS.length} projects are live to try`,
         }}

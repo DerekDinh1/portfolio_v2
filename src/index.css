@@ -197,6 +197,9 @@ html[data-time="night"] .btn-red.btn-pop:hover {
   background: var(--nav-plate-head);
   transition: background-color 0.75s ease;
 }
+/* Menu jumps land below the sticky nav (about 95px tall) instead of underneath it, with
+   room to spare for content above that is still loading and shifts the page. */
+.page section[id] { scroll-margin-top: 124px; }
 .nav-frame {
   width: 100%;
   padding: 4px 10px;
