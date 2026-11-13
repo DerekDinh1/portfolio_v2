@@ -65,9 +65,11 @@ function scrollToId(id) {
 //   status         { tag, text }  short tag with accessible description
 //   message        default text-box message
 //   greetMessage   message shown when the creature is tapped
+//   onTap          optional; called on tap, and a string it returns replaces greetMessage
 //   menu           [{ key, label, ariaLabel?, href?, download?, newTab?, scrollTo?, play? }]
 //                  href -> link; otherwise button. scrollTo = element id.
 //                  play = sprite animation to run on activation.
+//                  onSelect = called on activation; a string it returns is shown in the text box.
 //   ref            { play(name) } plays a sprite animation (e.g. "greet")
 export default function BattleHero({
   starter,
@@ -78,6 +80,7 @@ export default function BattleHero({
   status,
   message,
   greetMessage,
+  onTap,
   menu = [],
   ref,
 }) {
@@ -90,7 +93,8 @@ export default function BattleHero({
 
   const tap = () => {
     spriteRef.current?.play("greet");
-    setMsg((m) => ({ text: greetMessage, key: m.key + 1 }));
+    const text = onTap?.() || greetMessage;
+    setMsg((m) => ({ text, key: m.key + 1 }));
   };
 
   const onMenuKey = useCallback((e) => {
@@ -169,6 +173,8 @@ export default function BattleHero({
             const onClick = () => {
               if (item.play) spriteRef.current?.play(item.play);
               if (item.scrollTo) scrollToId(item.scrollTo);
+              const text = item.onSelect?.();
+              if (text) setMsg((m) => ({ text, key: m.key + 1 }));
             };
             const content = (
               <>

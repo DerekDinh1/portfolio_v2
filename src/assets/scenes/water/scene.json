@@ -24,13 +24,8 @@
           "drift": -2
         },
         {
-          "file": "day/20-peaks.png",
+          "file": "day/15-horizon.png",
           "w": 480,
-          "drift": 0
-        },
-        {
-          "file": "day/25-ridge.png",
-          "w": 240,
           "drift": 0
         },
         {
@@ -68,13 +63,8 @@
           "drift": -2
         },
         {
-          "file": "night/20-peaks.png",
+          "file": "night/15-horizon.png",
           "w": 480,
-          "drift": 0
-        },
-        {
-          "file": "night/25-ridge.png",
-          "w": 240,
           "drift": 0
         },
         {

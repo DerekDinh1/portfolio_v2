@@ -1,4 +1,6 @@
-"""Water habitat: alpine lake under Colorado front-range peaks (day + night).
+"""Water habitat: open ocean off a small beach, clear to the horizon (day + night).
+
+The mountain range and tree ridge drawn here are still used by the fire and grass habitats.
 
 Cel-lit, rounded, high-key landscape: key light from the top-left (sun by day, moon by night).
 Everything is drawn into role-indexed canvases; day and night share all geometry.
@@ -233,6 +235,23 @@ def clouds() -> Canvas:
         local = np.zeros_like(m)
         local[base - 12:base + 1, cx - 30:cx + 31] = True
         c.paint(m & ~below2 & local, "c_sh")
+    return c
+
+
+HORIZON = [(34, [(-16, 2), (-9, 4), (-1, 5), (8, 3), (15, 2)]), (118, [(-7, 2), (0, 3), (7, 2)]),
+           (212, [(-12, 3), (-4, 4), (5, 6), (14, 4), (22, 2)]), (300, [(-8, 2), (0, 4), (9, 3)]),
+           (392, [(-18, 2), (-10, 3), (-2, 5), (7, 4), (15, 2)]), (458, [(-6, 2), (2, 3)])]
+
+
+def horizon_clouds() -> Canvas:
+    """Low cloud banks sitting on the sea horizon, so the skyline is not one bare line."""
+    c = cv(H, WIDE)
+    roles = ["c_hi", "c_lit", "c_base", "c_sh"]
+    for cx, lobes in HORIZON:
+        for dx, r in lobes:
+            lobe(c, cx + dx, WATER_Y - r, r, roles, under=False, clip_y=WATER_Y - 1)
+    m = c.a != 0
+    c.paint(m & (grid(WIDE)[1] == WATER_Y - 1), "c_sh")           # flat base against the water
     return c
 
 
@@ -772,9 +791,7 @@ def build(variant: str) -> Variant:
     night = variant == "night"
     pal = PALETTES[variant]
     v = Variant()
-    ridge_c, ridge_mask = ridge()
-    peaks_c = peaks()
-    peak_mask = peaks_c.mask("pk_hi", "pk_lit", "pk_base", "pk_sh", "pk_dk", "snow_hi", "snow", "snow_sh")
+    none = np.zeros((H, W), bool)          # open sea: no far shore or range to reflect
 
     def add(file, canvas, drift=0, frames=1, fps=0):
         v.layers.append(Layer(f"{variant}/{file}", canvas.to_rgba(pal), drift, frames, fps))
@@ -783,9 +800,8 @@ def build(variant: str) -> Variant:
     if night:
         add("05-stars.png", stars(), frames=4, fps=3)
     add("10-clouds.png", clouds(), drift=-2)
-    add("20-peaks.png", peaks_c)
-    add("25-ridge.png", ridge_c)
-    add("30-water.png", water(ridge_mask, peak_mask), frames=WATER_FRAMES, fps=8)
+    add("15-horizon.png", horizon_clouds())
+    add("30-water.png", water(none, np.zeros((H, WIDE), bool)), frames=WATER_FRAMES, fps=8)
     if night:
         add("35-moonpath.png", moonpath(), frames=8, fps=8)
     add("40-shore.png", shore())

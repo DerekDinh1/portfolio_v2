@@ -1,0 +1,96 @@
+{
+  "size": {
+    "w": 240,
+    "h": 160
+  },
+  "platform": {
+    "file": "platform.png",
+    "w": 96,
+    "h": 24,
+    "cx": 176,
+    "cy": 80
+  },
+  "variants": {
+    "day": {
+      "layers": [
+        {
+          "file": "day/00-sky.png",
+          "w": 240,
+          "drift": 0
+        },
+        {
+          "file": "day/10-clouds.png",
+          "w": 480,
+          "drift": -2
+        },
+        {
+          "file": "day/20-peaks.png",
+          "w": 480,
+          "drift": 0
+        },
+        {
+          "file": "day/25-ridge.png",
+          "w": 240,
+          "drift": 0
+        },
+        {
+          "file": "day/30-meadow.png",
+          "w": 480,
+          "drift": 0,
+          "frames": 16,
+          "fps": 8
+        },
+        {
+          "file": "day/40-shore.png",
+          "w": 480,
+          "drift": 0
+        }
+      ],
+      "platform": "day/platform.png"
+    },
+    "night": {
+      "layers": [
+        {
+          "file": "night/00-sky.png",
+          "w": 480,
+          "drift": 0
+        },
+        {
+          "file": "night/05-stars.png",
+          "w": 240,
+          "drift": 0,
+          "frames": 4,
+          "fps": 3
+        },
+        {
+          "file": "night/10-clouds.png",
+          "w": 480,
+          "drift": -2
+        },
+        {
+          "file": "night/20-peaks.png",
+          "w": 480,
+          "drift": 0
+        },
+        {
+          "file": "night/25-ridge.png",
+          "w": 240,
+          "drift": 0
+        },
+        {
+          "file": "night/30-meadow.png",
+          "w": 480,
+          "drift": 0,
+          "frames": 16,
+          "fps": 8
+        },
+        {
+          "file": "night/40-shore.png",
+          "w": 480,
+          "drift": 0
+        }
+      ],
+      "platform": "night/platform.png"
+    }
+  }
+}

@@ -68,5 +68,16 @@ export const STARTERS = [
         : import("../assets/habitats/grass-day.jpg"),
     tagline: "Anime, golf, games, and Colorado trails.",
     blurb: "The person behind the tickets.",
+    // Battle-scene hero data. Level and the PICKS bar are counted from RECS on the page.
+    battle: {
+      habitat: "grass",
+      sprite: "vibeon",
+      status: {
+        tag: "OFF",
+        text: "Off the clock",
+      },
+      message: "VIBEON is off the clock. Want a pick?",
+      greetMessage: "VIBEON perks up its ears.",
+    },
   },
 ];
