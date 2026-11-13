@@ -29,7 +29,7 @@ PALETTE = {
     "U": (168, 240, 240),   # teal highlight
     "C": (240, 248, 240),   # pale underside
     "c": (176, 224, 224),   # underside shadow
-    "N": (40, 96, 160),     # navy (tail, tie, collar)
+    "N": (40, 96, 160),     # navy (tail, tie, collar, iris)
     "n": (24, 64, 120),     # navy shadow
     "M": (72, 136, 200),    # navy highlight
     "G": (152, 160, 184),   # clipboard
@@ -65,12 +65,12 @@ HEAD = rows("""
 16 13 37 K T2 U4 T14 t3 K
 17 13 38 K U T19 t4 K
 18 12 38 K U T20 t4 K
-19 12 38 K T K T11 K3 T8 t K
-20 12 38 K K W K T9 K W2 K2 T7 t K
-21 12 39 K K W K T9 K W2 K2 T7 t2 K
-22 12 39 K4 T9 K5 T7 t2 K
-23 12 38 K4 T9 K3 W K T7 t K
-24 12 38 K3 T2 D T2 D T5 K3 T8 t K
+19 12 38 K T2 K T10 K3 T8 t K
+20 12 38 K T K W K T8 K W2 K2 T7 t K
+21 12 39 K T K W K T8 K W2 K2 T7 t2 K
+22 12 39 K T K3 T8 K5 T7 t2 K
+23 12 38 K T K N K T8 K N3 K T7 t K
+24 12 38 K T2 K T D T2 D T5 K3 T8 t K
 25 11 38 K T4 D6 T7 P3 T5 t K
 26 10 38 K T3 K D3 K2 D4 K T3 P4 T5 t K
 27 10 38 K C4 K3 C2 K4 C2 T2 P4 T5 t K
@@ -93,21 +93,22 @@ HEAD = rows("""
 24 9 11 K T t
 25 9 10 K2
 """)
+# Both eyes share one construction: shine top-left, blue iris along the bottom. The far
+# (left) eye is the same height, narrower, and sits one pixel clear of the outline.
+# The lids only repaint x13..36 so the head's shadow column stays put during a blink.
 EYES_HALF = rows("""
-19 13 37 T25
-20 13 37 T25
-21 13 15 K3
+19 13 36 T24
+20 13 36 T24
+21 14 16 K3
 21 25 29 K5
 """)
 EYES_SHUT = rows("""
-19 13 37 T25
-20 13 37 T25
-21 13 37 T25
-22 13 15 K3
-22 16 24 T9
-22 25 29 K5
-23 13 37 T25
-24 13 37 T4 D T2 D T17
+19 13 36 T24
+20 13 36 T24
+21 13 36 T24
+22 13 36 T K3 T8 K5 T7
+23 13 36 T24
+24 13 36 T4 D T2 D T16
 """)
 
 BOARD = rows("""

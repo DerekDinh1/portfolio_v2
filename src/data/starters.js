@@ -43,6 +43,17 @@ export const STARTERS = [
         : import("../assets/habitats/fire-day.jpg"),
     tagline: "Small apps I build after hours.",
     blurb: "Projects, straight from GitHub.",
+    // Battle-scene hero data. Level and the LIVE bar are counted from PROJECTS on the page.
+    battle: {
+      habitat: "fire",
+      sprite: "buildasaur",
+      status: {
+        tag: "WIP",
+        text: "Always building something after hours",
+      },
+      message: "BUILDASAUR fired up the forge. What'll it be?",
+      greetMessage: "BUILDASAUR waves its wrench. Want to see the code?",
+    },
   },
   {
     slug: "personal",

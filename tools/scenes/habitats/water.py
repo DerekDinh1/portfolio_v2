@@ -267,21 +267,29 @@ def _jag(rng, n, lo, hi, run=(2, 4)):
     return out[:n]
 
 
-def peaks() -> Canvas:
+def peaks(ridgeline=None, far_range=None, snowline=SNOWLINE, canvas=None, names=None) -> Canvas:
+    """The mountain range. Other habitats reuse it with their own ridgeline and role names
+    (`names` maps this module's role names to theirs); snowline=0 leaves the rock bare."""
+    ridgeline = ridgeline or RIDGELINE
+    far_range = far_range or FAR_RANGE
+
+    def R(name):
+        return (names or {}).get(name, name)
+
     w = WIDE
-    c = cv(H, w)
+    c = canvas if canvas is not None else cv(H, w)
     xs, ys = grid(w)
     # far range: two tones, quantised into chunky 3px blocks
-    top = periodic_profile(FAR_RANGE, w)
+    top = periodic_profile(far_range, w)
     top = (top // 2) * 2
     top = top[(np.arange(w) // 3) * 3 + 1]
     body = ys >= top[None, :]
     rising = (np.roll(top, -1) - np.roll(top, 1) <= 0)[None, :]
-    c.paint(body & rising, "pk_far")
-    c.paint(body & ~rising, "pk_far_sh")
+    c.paint(body & rising, R("pk_far"))
+    c.paint(body & ~rising, R("pk_far_sh"))
 
     # main range. Work on three copies of the ridgeline so spur and valley lines can cross the seam.
-    ext = np.tile(periodic_profile(RIDGELINE, w), 3)
+    ext = np.tile(periodic_profile(ridgeline, w), 3)
     n = 3 * w
     summits = []
     for x in range(8, n - 8):
@@ -327,13 +335,13 @@ def peaks() -> Canvas:
             lit[y, x] = X <= sp
             crest[y, x] = X == sp and y - ext[summits[i]] < 14
     tp = ext[w:2 * w]
-    c.paint(M & lit, "pk_lit")
-    c.paint(M & ~lit, "pk_sh")
+    c.paint(M & lit, R("pk_lit"))
+    c.paint(M & ~lit, R("pk_sh"))
     left_edge = np.zeros_like(M)
     left_edge[:, 1:] = ~M[:, :-1]
     top_edge = ys == tp[None, :]
     hi_mask = M & lit & (left_edge | top_edge | crest)
-    c.paint(hi_mask, "pk_hi")
+    c.paint(hi_mask, R("pk_hi"))
 
     # rock strata: short strokes that run with the slope, darker on the lit faces and darkest in shadow
     rng = random.Random(7)
@@ -347,38 +355,39 @@ def peaks() -> Canvas:
             xx = (x - t if on_lit else x + t) % w
             yy = y + (t if steep else t // 2)
             if yy < FOOT and M[yy, xx] and lit[yy, xx] == on_lit and not hi_mask[yy, xx]:
-                c.put(xx, yy, "pk_base" if on_lit else "pk_dk")
+                c.put(xx, yy, R("pk_base") if on_lit else R("pk_dk"))
 
-    # snow: everything above a ragged snowline, with streaks running down the gullies
-    jag = _jag(random.Random(11), w, -2, 3, run=(2, 5))
-    snow = np.zeros_like(M)
-    for x in range(w):
-        snow[:max(0, SNOWLINE + jag[x]), x] = True
-    for _ in range(34):
-        x = rng.randrange(w)
-        if tp[x] >= SNOWLINE:
-            continue
-        y0, extra = SNOWLINE + jag[x], rng.randint(2, 6)
-        for xx in (x, x + 1)[:rng.randint(1, 2)]:
-            snow[y0:y0 + extra, xx % w] = True
-    snow &= M
-    below = np.zeros_like(M)
-    below[:-2] = ~snow[2:]            # the bottom two rows of the snow read a tone darker
-    c.paint(snow & lit, "snow_hi")
-    c.paint(snow & lit & below & ~top_edge, "snow")
-    c.paint(snow & ~lit, "snow_sh")
-    for _ in range(40):               # bare rock showing through
-        x, y = rng.randrange(w), rng.randint(14, SNOWLINE)
-        if snow[y, x] and y >= tp[x] + 3:
+    if snowline:
+        # snow: everything above a ragged snowline, with streaks running down the gullies
+        jag = _jag(random.Random(11), w, -2, 3, run=(2, 5))
+        snow = np.zeros_like(M)
+        for x in range(w):
+            snow[:max(0, snowline + jag[x]), x] = True
+        for _ in range(34):
+            x = rng.randrange(w)
+            if tp[x] >= snowline:
+                continue
+            y0, extra = snowline + jag[x], rng.randint(2, 6)
             for xx in (x, x + 1)[:rng.randint(1, 2)]:
-                if snow[y, xx % w]:
-                    c.put(xx % w, y, "pk_lit" if lit[y, xx % w] else "pk_dk")
+                snow[y0:y0 + extra, xx % w] = True
+        snow &= M
+        below = np.zeros_like(M)
+        below[:-2] = ~snow[2:]            # the bottom two rows of the snow read a tone darker
+        c.paint(snow & lit, R("snow_hi"))
+        c.paint(snow & lit & below & ~top_edge, R("snow"))
+        c.paint(snow & ~lit, R("snow_sh"))
+        for _ in range(40):               # bare rock showing through
+            x, y = rng.randrange(w), rng.randint(14, snowline)
+            if snow[y, x] and y >= tp[x] + 3:
+                for xx in (x, x + 1)[:rng.randint(1, 2)]:
+                    if snow[y, xx % w]:
+                        c.put(xx % w, y, R("pk_lit") if lit[y, xx % w] else R("pk_dk"))
 
     # mist at the foot of the range: flat band with a one-row dither
     m = c.a != 0
     row = ys == 49
-    c.paint(m & (ys >= 50), "pk_far")
-    c.paint(m & row & checker(w, parity=0), "pk_far")
+    c.paint(m & (ys >= 50), R("pk_far"))
+    c.paint(m & row & checker(w, parity=0), R("pk_far"))
     return c
 
 
