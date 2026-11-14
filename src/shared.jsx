@@ -16,11 +16,13 @@ const MOTION_TAGS = {
 };
 
 // Per-habitat motion presets: flow (water), spark (fire), sway (grass).
+// Avoid rotate/translateX here: a rotated full-width block pokes past the
+// viewport and makes the page scroll sideways on phones.
 // Undefined preset keeps the original Reveal feel.
 const REVEAL_PRESETS = {
   flow: { duration: 0.7, ease: [0.33, 1, 0.68, 1], y: 10 },
   spark: { duration: 0.32, ease: "easeOut", y: 14, scale: [0.96, 1] },
-  sway: { duration: 0.55, ease: EASE_OUT, y: 12, rotate: [-2, 0] },
+  sway: { duration: 0.6, ease: EASE_OUT, y: 14, scale: [0.985, 1] },
 };
 
 export function Reveal({ children, className = "", as = "div", delay = 0, preset, ...rest }) {
@@ -37,7 +39,6 @@ export function Reveal({ children, className = "", as = "div", delay = 0, preset
         opacity: 0,
         y,
         ...(p?.scale ? { scale: p.scale[0] } : null),
-        ...(p?.rotate ? { rotate: p.rotate[0] } : null),
       };
   const whileInView = reduce
     ? undefined
@@ -45,7 +46,6 @@ export function Reveal({ children, className = "", as = "div", delay = 0, preset
         opacity: 1,
         y: 0,
         ...(p?.scale ? { scale: p.scale[1] } : null),
-        ...(p?.rotate ? { rotate: p.rotate[1] } : null),
       };
 
   return (
@@ -53,7 +53,9 @@ export function Reveal({ children, className = "", as = "div", delay = 0, preset
       className={className}
       initial={initial}
       whileInView={whileInView}
-      viewport={{ once: true, amount: 0.2 }}
+      // Reveal as soon as the block's top edge is 8% into the viewport. A 20%
+      // threshold left tall sections (Experience) blank for most of a screen.
+      viewport={{ once: true, amount: "some", margin: "0px 0px -8% 0px" }}
       transition={{ duration: reduce ? 0 : duration, delay: reduce ? 0 : delay, ease }}
       {...rest}
     >
@@ -64,7 +66,7 @@ export function Reveal({ children, className = "", as = "div", delay = 0, preset
 
 // Tracks html[data-time] so components outside main.jsx's TimeProvider
 // (e.g. habitat backdrops) can react to day/night without a circular import.
-function useIsNight() {
+export function useIsNight() {
   const [night, setNight] = useState(
     () => typeof document !== "undefined" && document.documentElement.dataset.time === "night"
   );
@@ -179,24 +181,22 @@ export function SeamlessAmbienceVideo({ src, poster, className, active }) {
   );
 }
 
-// loop: "idle" | "hi" | "sleep" (sleep falls back to idle if the starter has no sleep asset)
-// Animated WebP loops (true alpha). Magenta-keyed MOV/WebM are not used — Safari
-// paints their matte as a solid pink square, and the WebMs are opaque pink too.
-export function MascotSprite({ starter, loop = "idle", className, alt, playOnce = false, onEnded }) {
-  const reduce = useReducedMotion();
-  const [failed, setFailed] = useState(false);
-  const [stillSrc, setStillSrc] = useState(null);
-  const [animSrc, setAnimSrc] = useState(null);
-
-  const hasSleepAsset = !!starter.loadSleep;
-  const effectiveLoop = loop === "sleep" && !hasSleepAsset ? "idle" : loop;
+// Game-style sprite motion: the crisp still art is animated with transforms
+// (breathing/sway at idle, a squash-and-hop "cry" on "hi"), the way handheld
+// Pokémon games animate battle sprites. Unlike the old video-derived loops this
+// never morphs, never shows a loop seam, and runs at the display's frame rate.
+// loop: "idle" | "hi". `cue` replays the hop each time it changes.
+export function MascotSprite({ starter, loop = "idle", cue = 0, className = "", alt }) {
+  const [src, setSrc] = useState(null);
+  const artRef = useRef(null);
+  const motion = loop === "hi" ? "hi" : "idle";
 
   useEffect(() => {
     let cancelled = false;
     starter
       .loadImg()
       .then((mod) => {
-        if (!cancelled) setStillSrc(mod.default);
+        if (!cancelled) setSrc(mod.default);
       })
       .catch(() => {});
     return () => {
@@ -204,68 +204,35 @@ export function MascotSprite({ starter, loop = "idle", className, alt, playOnce 
     };
   }, [starter]);
 
-  // Keep showing the current loop until the next one has decoded, so swapping
-  // idle <-> hi never flashes the (differently posed) still in between.
+  // A repeat tap while already in "hi" doesn't change the class, so restart
+  // the CSS animations by hand.
   useEffect(() => {
-    setFailed(false);
-    if (reduce) return undefined;
-
-    let cancelled = false;
-    const animLoader =
-      effectiveLoop === "hi" ? starter.loadHi : effectiveLoop === "sleep" ? starter.loadSleep : starter.loadIdle;
-
-    if (!animLoader) {
-      setFailed(true);
-      return undefined;
-    }
-
-    animLoader()
-      .then((mod) => {
-        if (cancelled) return;
-        if (!mod?.default) {
-          setFailed(true);
-          return;
-        }
-        const img = new Image();
-        img.src = mod.default;
-        const show = () => {
-          if (!cancelled) setAnimSrc(mod.default);
-        };
-        (img.decode ? img.decode() : Promise.resolve()).then(show, show);
-      })
-      .catch(() => {
-        if (!cancelled) setFailed(true);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [starter, effectiveLoop, reduce]);
-
-  useEffect(() => {
-    if (!playOnce || !animSrc || reduce || failed) return undefined;
-    const t = window.setTimeout(() => {
-      if (typeof onEnded === "function") onEnded();
-    }, 5200);
-    return () => window.clearTimeout(t);
-  }, [playOnce, animSrc, reduce, failed, onEnded]);
-
-  if (!stillSrc) {
-    return <span className={className} role="img" aria-label={alt} />;
-  }
-
-  const src = !reduce && !failed && animSrc ? animSrc : stillSrc;
+    if (!cue || motion !== "hi") return;
+    artRef.current?.getAnimations?.().forEach((a) => {
+      a.cancel();
+      a.play();
+    });
+  }, [cue, motion]);
 
   return (
-    <img
-      className={className}
-      src={src}
-      alt={alt}
-      loading="eager"
-      decoding="async"
-      fetchPriority="high"
-      onError={() => setFailed(true)}
-    />
+    <span
+      className={`mascot mascot--${starter.slug} ${className}`}
+      data-motion={motion}
+      role={src ? undefined : "img"}
+      aria-label={src ? undefined : alt}
+    >
+      {src ? (
+        <img
+          ref={artRef}
+          className="mascot-art"
+          src={src}
+          alt={alt}
+          decoding="async"
+          fetchPriority="high"
+          draggable={false}
+        />
+      ) : null}
+    </span>
   );
 }
 
@@ -312,6 +279,11 @@ export function PageHero({
   const reduce = useReducedMotion();
   const isNight = useIsNight();
   const [backdropSrc, setBackdropSrc] = useState(null);
+  const [cue, setCue] = useState(0);
+  const activate = (e) => {
+    setCue((c) => c + 1);
+    onMascotActivate?.(e);
+  };
 
   useEffect(() => {
     if (!starter.loadBackdrop) {
@@ -334,7 +306,7 @@ export function PageHero({
   const mascotAlt = `${starter.name}, the ${starter.type}-type starter`;
   const actionLabel = mascotLabel || `Tap ${starter.name}`;
   const mascot = (
-    <MascotSprite starter={starter} loop={mascotLoop} className="hero-mascot" alt={mascotAlt} />
+    <MascotSprite starter={starter} loop={mascotLoop} cue={cue} className="hero-mascot" alt={mascotAlt} />
   );
 
   let mascotNode = mascot;
@@ -347,14 +319,14 @@ export function PageHero({
         target={mascotTarget}
         rel={mascotRel}
         aria-label={actionLabel}
-        onClick={onMascotActivate}
+        onClick={activate}
       >
         {mascot}
       </a>
     );
   } else if (typeof onMascotActivate === "function") {
     mascotNode = (
-      <button type="button" className="hero-mascot-btn" onClick={onMascotActivate} aria-label={actionLabel}>
+      <button type="button" className="hero-mascot-btn" onClick={activate} aria-label={actionLabel}>
         {mascot}
       </button>
     );

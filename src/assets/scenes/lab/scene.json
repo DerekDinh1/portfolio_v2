@@ -1,0 +1,39 @@
+{
+  "size": {
+    "w": 240,
+    "h": 160
+  },
+  "platform": {
+    "file": "platform.png",
+    "w": 232,
+    "h": 48,
+    "cx": 120,
+    "cy": 86
+  },
+  "variants": {
+    "day": {
+      "layers": [
+        {
+          "file": "day/00-room.png",
+          "w": 240,
+          "drift": 0,
+          "frames": 2,
+          "fps": 2
+        }
+      ],
+      "platform": "day/platform.png"
+    },
+    "night": {
+      "layers": [
+        {
+          "file": "night/00-room.png",
+          "w": 240,
+          "drift": 0,
+          "frames": 2,
+          "fps": 2
+        }
+      ],
+      "platform": "night/platform.png"
+    }
+  }
+}

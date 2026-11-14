@@ -197,6 +197,9 @@ html[data-time="night"] .btn-red.btn-pop:hover {
   background: var(--nav-plate-head);
   transition: background-color 0.75s ease;
 }
+/* Menu jumps land below the sticky nav (about 95px tall) instead of underneath it, with
+   room to spare for content above that is still loading and shifts the page. */
+.page section[id] { scroll-margin-top: 124px; }
 .nav-frame {
   width: 100%;
   padding: 4px 10px;
@@ -316,8 +319,9 @@ html[data-time="night"] .btn-red.btn-pop:hover {
 .nav .time-toggle:hover,
 .nav .time-toggle:focus-visible { opacity: 1; }
 .nav .time-track { width: 42px; height: 22px; border-width: 2px; }
-.nav .time-knob { width: 16px; height: 16px; }
-.nav .time-toggle.night .time-knob { transform: translateX(18px); }
+/* track is 38x18 inside its border: a 14px knob leaves an even 2px gap on every side */
+.nav .time-knob { width: 14px; height: 14px; }
+.nav .time-toggle.night .time-knob { transform: translateX(20px); }
 .nav .time-star.s1 { left: 7px; top: 5px; }
 .nav .time-star.s2 { left: 15px; top: 11px; }
 .nav .time-star.s3 { left: 10px; top: 15px; }
@@ -430,6 +434,17 @@ html[data-time="night"] .btn-red.btn-pop:hover {
     radial-gradient(120% 80% at 50% 0%, var(--accent-soft), transparent 60%),
     repeating-linear-gradient(0deg, transparent 0 26px, var(--scanline) 26px 27px);
 }
+/* trainer portrait: 64px art shown at an exact 4x (3x on phones) so pixels stay square */
+.intro-trainer {
+  width: 256px;
+  height: 256px;
+  image-rendering: pixelated;
+  user-select: none;
+  margin-bottom: -14px;
+}
+@media (max-width: 480px) {
+  .intro-trainer { width: 192px; height: 192px; }
+}
 .dialogue {
   position: relative;
   max-width: 640px;
@@ -489,6 +504,8 @@ html[data-time="night"] .btn-red.btn-pop:hover {
 .progress li.done { background: var(--red-ink); }
 
 /* ---------- home: starter select ---------- */
+/* Starter select as the lab scene: full-bleed like the page heroes, with one line under it. */
+.select-lab-sub { max-width: var(--maxw); margin: 0 auto; padding: 18px 22px 8vh; text-align: center; }
 .select-stage { max-width: var(--maxw); margin: 0 auto; padding: 8vh 22px 12vh; text-align: center; }
 .select-title { font-family: var(--display); font-weight: 700; font-size: clamp(2rem, 6vw, 3rem); letter-spacing: -0.02em; }
 .select-sub { color: var(--muted); margin-top: 8px; }
@@ -528,22 +545,15 @@ html[data-time="night"] .btn-red.btn-pop:hover {
 .starter-img {
   width: 168px;
   height: 168px;
-  object-fit: contain;
   position: relative;
   z-index: 2;
-  filter: drop-shadow(var(--sprite-shadow));
-  background: transparent;
   will-change: transform, opacity;
 }
 .starter-img.emerging {
   animation: mascot-emerge 1.05s cubic-bezier(0.25, 0.8, 0.25, 1) both;
 }
-video.starter-img {
-  animation: none;
-}
-video.starter-img.emerging {
-  animation: mascot-emerge 1.05s cubic-bezier(0.25, 0.8, 0.25, 1) both;
-}
+/* hold the cry until the mascot has finished popping out of the ball */
+.mascot.starter-img.emerging .mascot-art { animation: none; }
 .starter-details.pending {
   opacity: 0;
   pointer-events: none;
@@ -1156,21 +1166,66 @@ html[data-time="night"] .hero-speech {
     0 0 22px color-mix(in srgb, var(--paper) 78%, transparent),
     0 1px 0 color-mix(in srgb, var(--paper) 88%, transparent);
 }
-.hero-art img,
 .hero-mascot {
   width: 280px;
   height: 280px;
-  object-fit: contain;
   position: relative;
-  animation: hero-float 4.2s ease-in-out infinite;
+}
+
+/* ---------- mascot sprite motion ----------
+   Battle-sprite style: the art stays planted at its feet and moves with
+   transforms only, so it stays sharp and runs on the compositor.
+   idle = breathe + sway loop; hi = anticipation squash, hop, land, settle,
+   then back to idle. Each starter tunes the same moves to its personality. */
+.mascot {
+  display: block;
+  --m-breathe: 3.2s;   /* one inhale/exhale */
+  --m-stretch: 1.024;  /* inhale height */
+  --m-squeeze: 0.988;  /* inhale width */
+  --m-sway: 0.8deg;
+  --m-hop: -11%;       /* hop height, as a share of the sprite */
+}
+.mascot--professional { --m-breathe: 3.4s; --m-stretch: 1.02; --m-sway: 0.6deg; --m-hop: -9%; }
+.mascot--projects { --m-breathe: 2.3s; --m-stretch: 1.032; --m-squeeze: 0.982; --m-sway: 1deg; --m-hop: -12%; }
+.mascot--personal { --m-breathe: 3.8s; --m-stretch: 1.018; --m-sway: 1.6deg; --m-hop: -8%; }
+.mascot-art {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform-origin: 50% 96%;
   filter: drop-shadow(var(--sprite-shadow));
-  background: transparent;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-drag: none;
 }
-@keyframes hero-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.mascot[data-motion="idle"] .mascot-art {
+  animation: mascot-breathe calc(var(--m-breathe) * 2) ease-in-out infinite;
 }
-.route-frame { min-height: calc(100vh - var(--nav-h)); }
+.mascot[data-motion="hi"] .mascot-art {
+  animation:
+    mascot-hop 0.9s linear 1,
+    mascot-breathe calc(var(--m-breathe) * 2) ease-in-out 0.9s infinite;
+}
+@keyframes mascot-breathe {
+  0%, 50%, 100% { transform: rotate(0deg) scale(1, 1); }
+  25% { transform: rotate(calc(var(--m-sway) * -1)) scale(var(--m-squeeze), var(--m-stretch)); }
+  75% { transform: rotate(var(--m-sway)) scale(var(--m-squeeze), var(--m-stretch)); }
+}
+@keyframes mascot-hop {
+  0% { transform: translateY(0) scale(1, 1); animation-timing-function: ease-out; }
+  14% { transform: translateY(0) scale(1.08, 0.9); animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
+  36% { transform: translateY(var(--m-hop)) scale(0.95, 1.07); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5); }
+  52% { transform: translateY(0) scale(1.1, 0.88); animation-timing-function: ease-out; }
+  66% { transform: translateY(calc(var(--m-hop) * 0.3)) scale(0.98, 1.03); animation-timing-function: ease-in; }
+  80% { transform: translateY(0) scale(1.03, 0.97); animation-timing-function: ease-in-out; }
+  100% { transform: translateY(0) scale(1, 1); }
+}
+.route-frame {
+  min-height: calc(100vh - var(--nav-h));
+  /* backstop: nothing in a page (hero art, entrance motion) may widen the viewport */
+  overflow-x: clip;
+}
 .route-fallback {
   display: grid;
   place-items: center;
@@ -1203,6 +1258,10 @@ html[data-time="night"] .hero-speech {
   font-size: 1.12rem;
   line-height: 1.65;
   color: var(--ink);
+}
+.career-throughline .career-tagline {
+  font-weight: 600;
+  margin-bottom: 0.6em;
 }
 
 /* stats */
@@ -1573,8 +1632,19 @@ html[data-time="night"] .chip-ai {
   font-size: 0.92rem;
   line-height: 1.45;
 }
+.rec-more { display: none; }
 @media (max-width: 820px) {
   .rec-groups { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .rec-group:not(.expanded) .rec-extra { display: none; }
+  .rec-more { display: inline-block; margin-top: 10px; }
+  /* hobby cards: two compact columns instead of six full-width rows */
+  .badges { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .badge { padding: 16px 14px; }
+  .badge h3 { font-size: 1rem; }
+  .badge p { font-size: 0.85rem; }
+  .fun-intro { font-size: 1.05rem; margin-bottom: 22px; }
 }
 
 /* give me a rec (legacy helpers still used by speech bubble kinds) */
@@ -1595,7 +1665,7 @@ html[data-time="night"] .chip-ai {
 }
 
 /* 404 mascot */
-.notfound-mascot { width: 160px; height: 160px; margin: 0 auto 18px; object-fit: contain; filter: drop-shadow(var(--sprite-shadow)); }
+.notfound-mascot { width: 160px; height: 160px; margin: 0 auto 18px; }
 
 /* contact */
 .contact { max-width: var(--maxw); margin: 6vh auto 0; padding: 7vh 22px 9vh; border-top: 1px solid var(--line); text-align: center; }
@@ -1688,7 +1758,7 @@ html[data-time="night"] .badge {
   .nav-item::before { left: 8px; }
   .wrap { padding: 0 18px; }
   .hero-inner { padding: 5vh 18px 3vh; }
-  .hero-art img, .hero-mascot { width: 220px; height: 220px; }
+  .hero-mascot { width: 220px; height: 220px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1707,8 +1777,7 @@ html[data-time="night"] .badge {
   .starter-details.in .starter-name,
   .starter-details.in .starter-blurb,
   .starter-details.in .starter-cta,
-  .hero-art img,
-  .hero-mascot {
+  .mascot-art {
     animation: none !important;
     transform: none;
   }

@@ -1,0 +1,221 @@
+/* Battle-scene hero. Every dimension is calc(var(--px) * n); --px is set by usePixelScale. */
+.bh {
+  --px: 1px;
+  --bh-fill: #F8F8E8;
+  --bh-ink: #283048;
+  --bh-line: #B8B8A0;
+  --bh-frame: #404858;
+  --bh-drop: #202838;
+  --bh-type: #3890D8;
+  --bh-dock: #202838;
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  font-family: var(--pixel);
+  font-size: calc(var(--px) * 8);
+  line-height: calc(var(--px) * 9);
+  letter-spacing: 0;
+  color: var(--bh-ink);
+  background: var(--bh-dock);
+  image-rendering: pixelated;
+}
+html[data-time="night"] .bh {
+  --bh-fill: #283048;
+  --bh-ink: #F8F8E8;
+  --bh-line: #98A8C8;
+  --bh-frame: #101420;
+  --bh-drop: #080a10;
+  --bh-dock: #101420;
+}
+.bh img { image-rendering: pixelated; }
+
+.bh-type--water { --bh-type: #3890D8; }
+.bh-type--fire { --bh-type: #E86830; }
+.bh-type--grass { --bh-type: #58A848; }
+
+.bh-sr {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* Panels: cream fill, 1px inner line, 2px outer frame, 1px drop edge. */
+.bh-panel {
+  background: var(--bh-fill);
+  color: var(--bh-ink);
+  border: calc(var(--px) * 2) solid var(--bh-frame);
+  box-shadow: inset 0 0 0 calc(var(--px) * 1) var(--bh-line), 0 calc(var(--px) * 1) 0 var(--bh-drop);
+}
+
+/* Scene region: native 0,0 to 240x112. */
+.bh-scene { position: relative; height: calc(var(--px) * 112); overflow: hidden; }
+.bh-safe {
+  position: absolute; top: 0;
+  left: calc((100% - var(--px) * 240) / 2);
+  width: calc(var(--px) * 240);
+  height: 100%;
+}
+
+.bh-backdrop { position: absolute; inset: 0; overflow: hidden; }
+.bh-backdrop-label {
+  position: absolute; right: calc(var(--px) * 4); top: calc(var(--px) * 4);
+  padding: calc(var(--px) * 1) calc(var(--px) * 3);
+  background: var(--bh-fill); color: var(--bh-ink);
+  border: calc(var(--px) * 1) solid var(--bh-frame);
+}
+.bh-layer {
+  position: absolute; inset: 0;
+  background-repeat: repeat-x;
+  background-position: 50% 0;
+  background-size: calc(var(--px) * var(--lw)) calc(var(--px) * 160 * var(--lf));
+  image-rendering: pixelated;
+}
+.bh-backdrop.is-paused .bh-layer { animation-play-state: paused !important; }
+@keyframes bh-drift {
+  from { background-position-x: 50%; }
+  to { background-position-x: calc(50% + var(--dx)); }
+}
+@keyframes bh-frames {
+  from { background-position-y: 0; }
+  to { background-position-y: calc(var(--px) * -160 * var(--lf)); }
+}
+.bh-platform { position: absolute; display: block; }
+
+/* Creature: 64x64, feet at (176, 80). */
+.bh-creature {
+  position: absolute; padding: 0; border: 0; background: none; color: inherit;
+  cursor: pointer; font: inherit;
+}
+.bh-creature:focus-visible,
+.bh-menu-item:focus-visible {
+  outline: calc(var(--px) * 1) solid var(--bh-ink);
+  outline-offset: calc(var(--px) * 1);
+  box-shadow: 0 0 0 calc(var(--px) * 2) var(--bh-fill);
+}
+.sprite { position: relative; display: block; width: 100%; height: 100%; overflow: hidden; }
+.sprite-sheet { position: absolute; left: 0; top: 0; max-width: none; transform-origin: 0 0; }
+.sprite--missing {
+  outline: calc(var(--px) * 1) dashed #181820;
+  outline-offset: calc(var(--px) * -1);
+  background: rgb(248 248 232 / 0.35);
+  display: flex; align-items: center; justify-content: center; text-align: center;
+  color: #181820;
+}
+.bh-creature .sprite--missing { color: #181820; }
+.sprite-missing-label { padding: calc(var(--px) * 4); }
+
+/* Info panel: native (12, 16), 104 wide. */
+.bh-info {
+  position: absolute;
+  left: calc(var(--px) * 12); top: calc(var(--px) * 16);
+  width: calc(var(--px) * 104);
+  padding: calc(var(--px) * 2) calc(var(--px) * 3);
+  display: flex; flex-direction: column; gap: calc(var(--px) * 1);
+}
+.bh-info-row { display: flex; align-items: center; justify-content: space-between; gap: calc(var(--px) * 3); }
+.bh-name { font: inherit; letter-spacing: 0; margin: 0; text-transform: uppercase; }
+.bh-badge, .bh-status {
+  padding: 0 calc(var(--px) * 3);
+  color: #181820;
+  border: calc(var(--px) * 1) solid var(--bh-frame);
+}
+.bh-badge { background: var(--bh-type); }
+.bh-status { background: #A8D848; }
+.bh-stat { display: flex; align-items: center; gap: calc(var(--px) * 3); }
+.bh-stat .bh-bar { flex: 1 1 auto; }
+.bh-bar {
+  height: calc(var(--px) * 4);
+  background: var(--bh-frame);
+  padding: calc(var(--px) * 1);
+}
+.bh-bar-fill { height: 100%; background: var(--bh-type); }
+
+/* Text box: native (0, 112), 240 wide, at least 48 tall (grows if the message needs it). */
+.bh-dock { display: flex; justify-content: center; background: var(--bh-dock); }
+.bh-textbox {
+  width: calc(var(--px) * 240);
+  min-height: calc(var(--px) * 48);
+  padding: calc(var(--px) * 3) calc(var(--px) * 4);
+  display: flex; align-items: stretch; gap: calc(var(--px) * 4);
+}
+.bh-message { flex: 1 1 auto; min-width: 0; margin: 0; overflow-wrap: anywhere; align-self: flex-start; }
+.bh-caret { animation: bh-blink 0.5s steps(1) infinite; }
+@keyframes bh-blink { 50% { opacity: 0; } }
+
+.bh-menu {
+  flex: 0 0 auto;
+  display: grid; grid-template-columns: auto auto;
+  /* touch targets: never shorter than 40 CSS px, even at phone scale */
+  grid-auto-rows: max(calc(var(--px) * 16), 40px);
+  column-gap: calc(var(--px) * 2);
+  align-content: center;
+}
+.bh-menu-item {
+  position: relative; display: flex; align-items: center;
+  padding: 0 calc(var(--px) * 2) 0 calc(var(--px) * 8);
+  min-width: 24px;
+  background: none; border: 0; border-radius: 0;
+  color: inherit; font: inherit; text-align: left; text-decoration: none; cursor: pointer;
+  white-space: nowrap;
+}
+.bh-cursor {
+  position: absolute; left: calc(var(--px) * 1);
+  visibility: hidden;
+}
+.bh-menu-item:hover .bh-cursor,
+.bh-menu-item:focus-visible .bh-cursor { visibility: visible; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bh-layer, .bh-caret { animation: none !important; }
+}
+
+/* Starter-select lab. Capsules get a 32x40 hit area around their 16x24 art. */
+.lab-trainer {
+  position: absolute; pointer-events: none;
+  width: calc(var(--px) * 16); height: calc(var(--px) * 32);
+  transition: left 0.42s steps(6);
+}
+.lab-capsule {
+  position: absolute; display: flex; align-items: flex-start; justify-content: center;
+  width: calc(var(--px) * 32); height: calc(var(--px) * 40);
+  padding: calc(var(--px) * 8) 0 0; border: 0; background: none; cursor: pointer;
+}
+.lab-capsule:disabled { cursor: default; }
+.lab-capsule-art {
+  display: block; overflow: hidden;
+  width: calc(var(--px) * 16); height: calc(var(--px) * 24);
+}
+.lab-capsule-art img { display: block; max-width: none; width: calc(var(--px) * 64); height: calc(var(--px) * 24); }
+.lab-capsule:hover:not(:disabled) .lab-capsule-art,
+.lab-capsule:focus-visible .lab-capsule-art { transform: translateY(calc(var(--px) * -1)); }
+.lab-capsule:focus-visible {
+  outline: calc(var(--px) * 1) solid var(--bh-ink);
+  outline-offset: calc(var(--px) * -3);
+}
+/* Showcase: the lab blurs and dims while the creature takes centre stage. */
+.lab-stage { position: absolute; inset: 0; transition: filter 0.35s steps(4) 0.25s; }
+.lab-stage.is-showcase { filter: blur(calc(var(--px) * 1)) brightness(0.86) saturate(0.9); }
+.lab-showcase { pointer-events: none; }
+.lab-creature {
+  position: absolute;
+  width: calc(var(--px) * 64); height: calc(var(--px) * 64);
+  transform-origin: 50% 94%;
+  animation: lab-popout 0.6s steps(12) both;
+}
+.lab-shadow {
+  position: absolute; left: calc(var(--px) * 12); bottom: 0;
+  width: calc(var(--px) * 40); height: calc(var(--px) * 7);
+  border-radius: 50%; background: rgb(16 24 40 / 0.3);
+}
+.lab-creature .sprite { position: relative; }
+/* Out of the capsule (--fx, --fy), up in an arc, then down to centre stage at full size. */
+@keyframes lab-popout {
+  0% { transform: translate(var(--fx), var(--fy)) scale(0.12); opacity: 0; }
+  12% { opacity: 1; }
+  55% { transform: translate(calc(var(--fx) * 0.35), calc(var(--fy) - var(--px) * 16)) scale(0.75); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+.lab .bh-menu-item:disabled { opacity: 0.5; cursor: default; }
+@media (prefers-reduced-motion: reduce) {
+  .lab-trainer, .lab-stage { transition: none; }
+  .lab-creature { animation: none; }
+}

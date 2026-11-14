@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import {
   STARTERS,
   PROFESSIONAL_THROUGLINE,
@@ -8,72 +8,58 @@ import {
   SKILLS,
   EDUCATION,
   RESUME_PDF,
+  CONTACT,
 } from "../data/index.js";
-import { PageHero, Reveal, Contact, ExpRow, ExpRail, StatBars } from "../shared.jsx";
+import { Reveal, Contact, ExpRow, ExpRail, StatBars } from "../shared.jsx";
+import BattleHero from "../game/BattleHero.jsx";
 
 export default function Professional() {
   const starter = STARTERS[0];
-  const [mascotLoop, setMascotLoop] = useState("idle");
+  const { battle } = starter;
+  const heroRef = useRef(null);
   const expSectionRef = useRef(null);
-  const greetTimerRef = useRef(null);
 
+  const menu = [
+    { key: "resume", label: "RÉSUMÉ", ariaLabel: "Download résumé", href: RESUME_PDF, download: true, play: "action" },
+    { key: "experience", label: "EXPERIENCE", scrollTo: "experience" },
+    { key: "skills", label: "SKILLS", scrollTo: "skills" },
+    { key: "contact", label: "CONTACT", ariaLabel: "Contact on LinkedIn (opens in a new tab)", href: CONTACT.linkedin, newTab: true },
+  ];
+
+  // Greet once when the experience section first scrolls into view.
   useEffect(() => {
     const el = expSectionRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return undefined;
-
-    let greeted = false;
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !greeted) {
-          greeted = true;
-          setMascotLoop("hi");
-          greetTimerRef.current = setTimeout(() => setMascotLoop("idle"), 1400);
+        if (entry.isIntersecting) {
+          heroRef.current?.play("greet");
+          observer.disconnect();
         }
       },
       { threshold: 0.35 }
     );
     observer.observe(el);
-    return () => {
-      observer.disconnect();
-      if (greetTimerRef.current) clearTimeout(greetTimerRef.current);
-    };
+    return () => observer.disconnect();
   }, []);
-
-  const onMascotActivate = () => {
-    setMascotLoop("hi");
-    if (greetTimerRef.current) clearTimeout(greetTimerRef.current);
-    greetTimerRef.current = setTimeout(() => setMascotLoop("idle"), 1200);
-  };
 
   return (
     <main className="page theme-water">
-      <PageHero
+      <BattleHero
+        ref={heroRef}
         starter={starter}
-        variant="dossier"
-        mascotLoop={mascotLoop}
-        mascotHref={RESUME_PDF}
-        mascotDownload
-        mascotLabel={`Download résumé from ${starter.name}`}
-        onMascotActivate={onMascotActivate}
-        speech={{
-          name: starter.name.toUpperCase(),
-          text: "Tap me to download my résumé!",
-          hint: true,
-          key: "hint-resume",
-        }}
-      >
-        <div className="hero-cta-row">
-          <a className="btn btn-red btn-pop" href={RESUME_PDF} download>
-            Download résumé
-          </a>
-          <span className="availability-chip">
-            <span className="availability-dot" aria-hidden="true" />
-            Open to senior IT · automation · AI ops
-          </span>
-        </div>
-      </PageHero>
+        habitat={battle.habitat}
+        sprite={battle.sprite}
+        level={battle.level}
+        bar={battle.bar}
+        status={battle.status}
+        message={battle.message}
+        greetMessage={battle.greetMessage}
+        menu={menu}
+      />
       <div className="wrap">
         <Reveal className="career-throughline" as="section" preset="flow">
+          <p className="career-tagline">{starter.tagline}</p>
           <p>{PROFESSIONAL_THROUGLINE}</p>
         </Reveal>
 
@@ -91,7 +77,7 @@ export default function Professional() {
           </ul>
         </Reveal>
 
-        <Reveal className="block" as="section" preset="flow">
+        <Reveal className="block" as="section" preset="flow" id="experience">
           <div ref={expSectionRef}>
             <h2 className="block-h">Experience</h2>
             <ExpRail>
@@ -113,7 +99,7 @@ export default function Professional() {
           </div>
         </Reveal>
 
-        <Reveal className="block" as="section" preset="flow">
+        <Reveal className="block" as="section" preset="flow" id="skills">
           <h2 className="block-h">Skills</h2>
           <div className="skills">
             {SKILLS.map((g) => (
