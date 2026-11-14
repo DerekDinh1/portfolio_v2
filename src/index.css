@@ -504,6 +504,8 @@ html[data-time="night"] .btn-red.btn-pop:hover {
 .progress li.done { background: var(--red-ink); }
 
 /* ---------- home: starter select ---------- */
+/* Starter select as the lab scene: full-bleed like the page heroes, with one line under it. */
+.select-lab-sub { max-width: var(--maxw); margin: 0 auto; padding: 18px 22px 8vh; text-align: center; }
 .select-stage { max-width: var(--maxw); margin: 0 auto; padding: 8vh 22px 12vh; text-align: center; }
 .select-title { font-family: var(--display); font-weight: 700; font-size: clamp(2rem, 6vw, 3rem); letter-spacing: -0.02em; }
 .select-sub { color: var(--muted); margin-top: 8px; }

@@ -167,3 +167,55 @@ html[data-time="night"] .bh {
 @media (prefers-reduced-motion: reduce) {
   .bh-layer, .bh-caret { animation: none !important; }
 }
+
+/* Starter-select lab. Capsules get a 32x40 hit area around their 16x24 art. */
+.lab-trainer {
+  position: absolute; pointer-events: none;
+  width: calc(var(--px) * 16); height: calc(var(--px) * 32);
+  transition: left 0.42s steps(6);
+}
+.lab-capsule {
+  position: absolute; display: flex; align-items: flex-start; justify-content: center;
+  width: calc(var(--px) * 32); height: calc(var(--px) * 40);
+  padding: calc(var(--px) * 8) 0 0; border: 0; background: none; cursor: pointer;
+}
+.lab-capsule:disabled { cursor: default; }
+.lab-capsule-art {
+  display: block; overflow: hidden;
+  width: calc(var(--px) * 16); height: calc(var(--px) * 24);
+}
+.lab-capsule-art img { display: block; max-width: none; width: calc(var(--px) * 64); height: calc(var(--px) * 24); }
+.lab-capsule:hover:not(:disabled) .lab-capsule-art,
+.lab-capsule:focus-visible .lab-capsule-art { transform: translateY(calc(var(--px) * -1)); }
+.lab-capsule:focus-visible {
+  outline: calc(var(--px) * 1) solid var(--bh-ink);
+  outline-offset: calc(var(--px) * -3);
+}
+/* Showcase: the lab blurs and dims while the creature takes centre stage. */
+.lab-stage { position: absolute; inset: 0; transition: filter 0.35s steps(4) 0.25s; }
+.lab-stage.is-showcase { filter: blur(calc(var(--px) * 1)) brightness(0.86) saturate(0.9); }
+.lab-showcase { pointer-events: none; }
+.lab-creature {
+  position: absolute;
+  width: calc(var(--px) * 64); height: calc(var(--px) * 64);
+  transform-origin: 50% 94%;
+  animation: lab-popout 0.6s steps(12) both;
+}
+.lab-shadow {
+  position: absolute; left: calc(var(--px) * 12); bottom: 0;
+  width: calc(var(--px) * 40); height: calc(var(--px) * 7);
+  border-radius: 50%; background: rgb(16 24 40 / 0.3);
+}
+.lab-creature .sprite { position: relative; }
+/* Out of the capsule (--fx, --fy), up in an arc, then down to centre stage at full size. */
+@keyframes lab-popout {
+  0% { transform: translate(var(--fx), var(--fy)) scale(0.12); opacity: 0; }
+  12% { opacity: 1; }
+  55% { transform: translate(calc(var(--fx) * 0.35), calc(var(--fy) - var(--px) * 16)) scale(0.75); }
+  100% { transform: translate(0, 0) scale(1); }
+}
+.lab .bh-menu-item:disabled { opacity: 0.5; cursor: default; }
+@media (prefers-reduced-motion: reduce) {
+  .lab-trainer, .lab-stage { transition: none; }
+  .lab-creature { animation: none; }
+}

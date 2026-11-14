@@ -16,7 +16,7 @@ function prefersReducedMotion() {
 // Typewriter text box. Only this component re-renders while typing. The live
 // region is off while typing; the full message is exposed to screen readers
 // once typing finishes.
-function TextBox({ text, msgKey, children }) {
+export function TextBox({ text, msgKey, children }) {
   const [shown, setShown] = useState(() => (prefersReducedMotion() ? text.length : 0));
   const typing = shown < text.length;
 

@@ -37,9 +37,13 @@ export default function SpriteSheet({ slug, className = "", ref }) {
 
     const canRun = () => onScreen && !document.hidden && !reduceMql.matches;
 
+    // An animation may list `order`: the sheet column for each step, so frames can repeat.
+    const steps = (a) => (a.order ? a.order.length : a.frames.length);
+    const column = (a) => (a.order ? a.order[s.frame] : s.frame);
+
     const draw = () => {
       const a = animations[s.anim];
-      img.style.transform = `translate(calc(var(--px) * ${-s.frame * fw}), calc(var(--px) * ${-a.row * fh}))`;
+      img.style.transform = `translate(calc(var(--px) * ${-column(a) * fw}), calc(var(--px) * ${-a.row * fh}))`;
     };
 
     const tick = () => {
@@ -47,13 +51,13 @@ export default function SpriteSheet({ slug, className = "", ref }) {
       timer = 0;
       draw();
       const a = animations[s.anim];
-      if (!canRun() || (a.loop && a.frames.length < 2)) return;
-      timer = window.setTimeout(advance, a.frames[s.frame].ms);
+      if (!canRun() || (a.loop && steps(a) < 2)) return;
+      timer = window.setTimeout(advance, (a.frames[column(a)] || a.frames[0]).ms);
     };
 
     function advance() {
       const a = animations[s.anim];
-      if (s.frame + 1 < a.frames.length) {
+      if (s.frame + 1 < steps(a)) {
         s.frame += 1;
       } else if (a.loop) {
         s.frame = 0;
