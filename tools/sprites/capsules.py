@@ -1,6 +1,6 @@
 """The three starter capsules: an original pill-shaped canister with metal caps and a glass
 core tinted by type, each with its own emblem. One 64x24 strip per type, four 16x24 frames:
-closed, tilted left, tilted right, open.
+closed, lid nudged left, lid nudged right and lifting, open. Only the lid moves, at the seam.
 
     tools/.venv/bin/python tools/sprites/capsules.py
 """
@@ -21,16 +21,17 @@ TYPES = {
     "grass": dict(a=(176, 232, 136), A=(88, 168, 72), b=(48, 112, 64), emblem=["..ee", ".eee", "eee.", "e..."]),   # leaf
 }
 
-CLOSED = [
-    "................",
-    "................",
+LID = [                      # the metal cap, four rows above the seam
     ".....KKKKKK.....",
     "....KhhhhhgK....",
     "...KhWhhhhggK...",
     "...KggggggmmK...",
-    "...KKKKKKKKKK...",
+]
+SEAM_Y = 8                   # the rim line where the lid meets the glass
+BODY = [
+    "...KKKKKKKKKK...",    # rim
     "...KaAAAAAAbK...",
-    "...KaWAAAAAbK...",
+    "...KaAAAAAAbK...",
     "...KaAAAAAAbK...",
     "...KaAAAAAAbK...",
     "...KaAAAAAAbK...",
@@ -42,40 +43,37 @@ CLOSED = [
     "...KhhhhhhgmK...",
     "....KggggmmK....",
     ".....KKKKKK.....",
-    "................",
-    "................",
-    "................",
-    "................",
 ]
-# Open: the cap swings up and to the right, and light pours out of the glass.
-OPEN = [
-    ".......KKKKKK...",
-    "......KhhhhhgK..",
-    ".....KhWhhhhggK.",
-    ".....KggggggmmK.",
-    "..Y...KKKKKKKK..",
-    "...Y...Y....Y...",
-    "....Y.YWY..Y....",
-    "...KYWWWWWWYK...",
-    "...KaYWWWWYbK...",
-    "...KaAYWWYAbK...",
-] + CLOSED[10:]
+# Light between the rim and the lifted lid. PEEK is the sliver shown mid-wobble.
+PEEK = ["....YYYYYYYY...."]
+BURST = [
+    "..Y...KKKKKKKK..",    # underside of the lifted lid
+    "...Y..YWWY..Y...",
+    "....YYWWWWYY....",
+    "....YWWWWWWY....",
+]
 
 
-def frame(grid, kind, shear=0):
+def frame(kind, lid_dx=0, lid_dy=0, light=()):
+    """lid_dx/lid_dy move the lid only; `light` rows sit directly above the rim."""
     spec = TYPES[kind]
     pal = {**METAL, "a": spec["a"], "A": spec["A"], "b": spec["b"], "e": METAL["W"]}
-    rows = [list(r) for r in grid]
+    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
+
+    def put(grid, y0, dx=0):
+        for j, row in enumerate(grid):
+            for x, ch in enumerate(row):
+                if ch != "." and 0 <= x + dx < W and 0 <= y0 + j < H:
+                    im.putpixel((x + dx, y0 + j), pal[ch] + (255,))
+
+    body = [list(r) for r in BODY]
     for j, er in enumerate(spec["emblem"]):                 # emblem sits low in the glass
         for i, ch in enumerate(er):
             if ch == "e":
-                rows[10 + j][6 + i] = "e"
-    im = Image.new("RGBA", (W, H), (0, 0, 0, 0))
-    for y, row in enumerate(rows):
-        dx = shear if y < 10 else 0                         # only the top half leans when it wobbles
-        for x, ch in enumerate(row):
-            if ch != "." and 0 <= x + dx < W:
-                im.putpixel((x + dx, y), pal[ch] + (255,))
+                body[3 + j][6 + i] = "e"
+    put(["".join(r) for r in body], SEAM_Y)
+    put(light, SEAM_Y - len(light))
+    put(LID, SEAM_Y - len(LID) + lid_dy, lid_dx)
     return im
 
 
@@ -85,7 +83,9 @@ def main():
     review = Image.new("RGBA", (W * 4 * 8, H * 3 * 8), (208, 160, 104, 255))
     for r, kind in enumerate(TYPES):
         strip = Image.new("RGBA", (W * 4, H), (0, 0, 0, 0))
-        for i, im in enumerate((frame(CLOSED, kind), frame(CLOSED, kind, -1), frame(CLOSED, kind, 1), frame(OPEN, kind))):
+        frames = (frame(kind), frame(kind, lid_dx=-1), frame(kind, lid_dx=1, lid_dy=-1, light=PEEK),
+                  frame(kind, lid_dx=2, lid_dy=-4, light=BURST))
+        for i, im in enumerate(frames):
             strip.paste(im, (i * W, 0))
         used = {px for px in strip.get_flattened_data() if px[3]}
         assert len(used) <= 15, f"{kind}: {len(used)} colours"

@@ -219,7 +219,11 @@ def frame(bob=0, tail=0, eyes="open", lift=0, check=False, flash=False, hop=0):
         stamp(im, CHECK, dy=-lift - hop)
     stamp(im, BODY, dy=-hop)
     stamp(im, HAND_L, dy=-lift - hop)
-    stamp(im, STALK, dy=-hop)
+    # The whole tail wags: the half of the stalk by the body moves a little, the far half
+    # moves with the fluke, so the bend travels along the tail instead of hinging at the tip.
+    near = int(tail / 2)
+    stamp(im, [(y, x0, pix[:max(0, 41 - x0)]) for y, x0, pix in STALK], dy=near - hop)
+    stamp(im, [(y, max(x0, 41), pix[max(0, 41 - x0):]) for y, x0, pix in STALK], dy=tail - hop)
     stamp(im, FLUKE, dy=tail - hop)
     stamp(im, HEAD, dy=bob - hop)
     if eyes == "half":
@@ -232,9 +236,9 @@ def frame(bob=0, tail=0, eyes="open", lift=0, check=False, flash=False, hop=0):
 I = lambda ms, **kw: (frame(**kw), ms)
 ANIMS = {
     "idle": [
-        I(240), I(200, tail=-1), I(200, bob=1, tail=-1), I(240, bob=1, tail=-2), I(200, bob=1, tail=-1),
-        I(200, tail=-1), I(240), I(200, tail=1), I(70, eyes="half", tail=1), I(90, eyes="shut", tail=1),
-        I(70, eyes="half"), I(240),
+        I(220), I(180, tail=-1), I(180, bob=1, tail=-2), I(220, bob=1, tail=-2), I(180, bob=1, tail=-1),
+        I(180), I(180, tail=1), I(220, tail=2), I(70, eyes="half", tail=2), I(90, eyes="shut", tail=1),
+        I(70, eyes="half"), I(220),
     ],
     "greet": [
         I(70, bob=1), I(80, bob=2, eyes="half"), I(50, hop=1, tail=-1), I(50, hop=2, tail=-2), I(60, hop=3, tail=-1),

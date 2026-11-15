@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useIsNight } from "../shared.jsx";
 import { getScene } from "./assets.js";
+import { SLOW } from "./timing.js";
 
 const PLACEHOLDER = { water: "#3890D8", fire: "#E86830", grass: "#58A848" };
 
@@ -29,21 +30,35 @@ function useRunning(ref) {
   return running;
 }
 
-function layerStyle(layer, url) {
+// Motion is smooth rather than ticking: drift is continuous, and an animated layer is drawn
+// twice. The second copy (`ahead`) shows the next frame and fades in over the current one,
+// so each frame dissolves into the next instead of snapping.
+function layerStyle(layer, url, ahead = false) {
   const frames = layer.frames || 1;
   const drift = layer.drift || 0;
   const names = [];
   const durations = [];
   const timings = [];
+  const delays = [];
   if (drift) {
     names.push("bh-drift");
-    durations.push(`${layer.w / Math.abs(drift)}s`);
-    timings.push(`steps(${layer.w})`);
+    durations.push(`${(layer.w / Math.abs(drift)) * SLOW}s`);
+    timings.push("linear");
+    delays.push("0s");
   }
   if (frames > 1) {
+    const loop = (frames / (layer.fps || 4)) * SLOW;
+    const step = loop / frames;
     names.push("bh-frames");
-    durations.push(`${frames / (layer.fps || 4)}s`);
+    durations.push(`${loop}s`);
     timings.push(`steps(${frames})`);
+    delays.push(ahead ? `${-step}s` : "0s");
+    if (ahead) {
+      names.push("bh-fade");
+      durations.push(`${step}s`);
+      timings.push("linear");
+      delays.push("0s");
+    }
   }
   return {
     backgroundImage: `url(${url})`,
@@ -55,6 +70,7 @@ function layerStyle(layer, url) {
           animationName: names.join(", "),
           animationDuration: durations.join(", "),
           animationTimingFunction: timings.join(", "),
+          animationDelay: delays.join(", "),
           animationIterationCount: "infinite",
         }
       : null),
@@ -96,13 +112,16 @@ export default function SceneBackdrop({ habitat, className = "" }) {
     <div ref={ref} className={`bh-backdrop ${running ? "" : "is-paused"} ${className}`} aria-hidden="true">
       {layers.map((layer) => {
         const src = url(layer.file);
-        return src ? (
-          <div
-            key={`${night}-${layer.file}`}
-            className="bh-layer"
-            style={layerStyle(layer, src)}
-          />
-        ) : null;
+        if (!src) return null;
+        const key = `${night}-${layer.file}`;
+        return (layer.frames || 1) > 1 ? (
+          <div key={key} className="bh-layer-pair">
+            <div className="bh-layer" style={layerStyle(layer, src)} />
+            <div className="bh-layer bh-layer-ahead" style={layerStyle(layer, src, true)} />
+          </div>
+        ) : (
+          <div key={key} className="bh-layer" style={layerStyle(layer, src)} />
+        );
       })}
       {platform && platformUrl ? (
         <div className="bh-safe">

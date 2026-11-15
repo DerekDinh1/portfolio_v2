@@ -2,9 +2,10 @@ import { useCallback, useEffect, useImperativeHandle, useRef, useState } from "r
 import SceneBackdrop from "./SceneBackdrop.jsx";
 import SpriteSheet from "./SpriteSheet.jsx";
 import usePixelScale from "./usePixelScale.js";
+import { SLOW } from "./timing.js";
 import "./game.css";
 
-const TYPE_MS = 28;
+export const TYPE_MS = 28 * SLOW;
 const SPRITE_W = 64;
 const FEET = { x: 176, y: 80 };
 const ANCHOR = { x: 32, y: 60 };
@@ -15,34 +16,47 @@ function prefersReducedMotion() {
 
 // Typewriter text box. Only this component re-renders while typing. The live
 // region is off while typing; the full message is exposed to screen readers
-// once typing finishes.
-export function TextBox({ text, msgKey, children }) {
+// once typing finishes. `note` is an optional alert line shown under the message; `more`
+// shows a "there is more" arrow once the message is typed; `onClick` makes the box tappable;
+// `onTyped` is called once each time a message finishes typing.
+export function TextBox({ text, msgKey, note, more, className, onClick, onTyped, children }) {
   const [shown, setShown] = useState(() => (prefersReducedMotion() ? text.length : 0));
   const typing = shown < text.length;
+
+  const onTypedRef = useRef(onTyped);
+  useEffect(() => {
+    onTypedRef.current = onTyped;
+  });
 
   useEffect(() => {
     if (prefersReducedMotion()) {
       setShown(text.length);
+      onTypedRef.current?.();
       return undefined;
     }
     setShown(0);
+    let n = 0;
     const id = window.setInterval(() => {
-      setShown((n) => {
-        if (n + 1 >= text.length) window.clearInterval(id);
-        return n + 1;
-      });
+      n += 1;
+      setShown(n);
+      if (n >= text.length) {
+        window.clearInterval(id);
+        onTypedRef.current?.();
+      }
     }, TYPE_MS);
     return () => window.clearInterval(id);
   }, [text, msgKey]);
 
   return (
     <div className="bh-dock">
-      <div className="bh-panel bh-textbox">
+      <div className={`bh-panel bh-textbox${className ? ` ${className}` : ""}`} onClick={onClick}>
         <p className="bh-message" aria-live={typing ? "off" : "polite"} aria-atomic="true">
           <span aria-hidden="true">{text.slice(0, shown)}</span>
           {typing ? <span className="bh-caret" aria-hidden="true">▌</span> : null}
-          <span className="bh-sr">{typing ? "" : text}</span>
+          {note && !typing ? <span className="bh-note" aria-hidden="true">{note}</span> : null}
+          <span className="bh-sr">{typing ? "" : note ? `${text} ${note}` : text}</span>
         </p>
+        {more && !typing ? <span className="bh-more" aria-hidden="true">▼</span> : null}
         {children}
       </div>
     </div>

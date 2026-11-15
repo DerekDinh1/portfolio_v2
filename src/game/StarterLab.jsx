@@ -4,7 +4,8 @@ import { STARTERS } from "../data/index.js";
 import SceneBackdrop from "./SceneBackdrop.jsx";
 import SpriteSheet from "./SpriteSheet.jsx";
 import usePixelScale from "./usePixelScale.js";
-import { TextBox } from "./BattleHero.jsx";
+import { TextBox, TYPE_MS } from "./BattleHero.jsx";
+import { SLOW } from "./timing.js";
 import "./game.css";
 
 const capsuleUrls = import.meta.glob("../assets/sprites/capsules/*.png", {
@@ -15,13 +16,20 @@ const capsuleUrls = import.meta.glob("../assets/sprites/capsules/*.png", {
 
 // Scene coordinates (art pixels) matching tools/scenes/habitats/lab.py.
 const SLOTS = [84, 120, 156]; // capsule centres on the table
-const CAPSULE_TOP = 63;
+const CAPSULE_TOP = 61;
 const TRAINER_FEET_Y = 67; // just behind the table
 const CAPSULE_MOUTH_Y = 69; // where the creature bursts out
 const STAGE = { x: 120, y: 100 }; // centre stage: where the creature lands, feet here
-const WALK_MS = 420;
+const WALK_MS = 420 * SLOW;
 const WOBBLE = [1, 0, 2, 0, 1, 0, 2]; // capsule strip frames before it opens
-const WOBBLE_MS = 90;
+const WOBBLE_MS = 90 * SLOW;
+const POP_MS = 600 * SLOW;
+const BLUR_MS = 350 * SLOW;
+const INTRO = "Three capsules rest on the table. One for each side of my work.";
+const ASK = "Which one will you open?";
+const INTRO_HOLD_MS = 1100 * SLOW; // pause on the finished intro before the question
+const CONFIRM_DELAY_MS = 320 * SLOW; // beat between the creature's message and YES / NO
+const INTRO_READ_MS = 2600; // reduced motion: nothing types, so allow reading time instead
 
 function prefersReducedMotion() {
   return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -31,8 +39,9 @@ const px = (n) => `calc(var(--px) * ${n})`;
 
 // Starter select as a lab scene: the professor stands behind a table of three typed
 // capsules. Picking one walks him over and opens it; the creature pops out of the capsule
-// to centre stage while the lab behind it blurs, with a yes/no prompt. The text-box menu
-// offers the same choices as the capsules.
+// to centre stage while the lab behind it blurs, with a yes/no prompt. The text box opens
+// with an intro message, then asks the question with the types in a row beneath it; the
+// menu offers the same choices as the capsules.
 export default function StarterLab() {
   const rootRef = usePixelScale();
   const trainerRef = useRef(null);
@@ -41,6 +50,8 @@ export default function StarterLab() {
   const timers = useRef([]);
   const [picked, setPicked] = useState(null);
   const [phase, setPhase] = useState("idle"); // idle | walking | opening | shown
+  const [confirm, setConfirm] = useState(false); // shown only: YES / NO have popped out
+  const [asked, setAsked] = useState(false); // idle only: false = intro message, true = question + types
   const [trainerX, setTrainerX] = useState(SLOTS[1]);
   const [capFrame, setCapFrame] = useState(0);
   const [msgKey, setMsgKey] = useState(0);
@@ -51,9 +62,31 @@ export default function StarterLab() {
     return () => pending.forEach((t) => window.clearTimeout(t));
   }, []);
 
+  // The intro types out alone, holds for a beat, then gives way to the question and the
+  // type menu. A tap on the text box or a key press skips the wait.
+  const intro = phase === "idle" && !asked;
+  useEffect(() => {
+    if (!intro) return undefined;
+    const wait = prefersReducedMotion() ? INTRO_READ_MS : INTRO.length * TYPE_MS + INTRO_HOLD_MS;
+    const id = window.setTimeout(() => setAsked(true), wait);
+    const onKey = (e) => {
+      if (e.key !== "Enter" && e.key !== " ") return;
+      if (e.target instanceof Element && e.target.closest("a, button, input, textarea, select")) return;
+      e.preventDefault();
+      setAsked(true);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.clearTimeout(id);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [intro]);
+
   const choose = useCallback(
     (i) => {
       if (phase === "walking" || phase === "opening") return;
+      setAsked(true);
+      setConfirm(false);
       setPicked(i);
       setMsgKey((k) => k + 1);
       if (prefersReducedMotion()) {
@@ -83,18 +116,19 @@ export default function StarterLab() {
 
   const reset = () => {
     setPicked(null);
+    setConfirm(false);
     setCapFrame(0);
     setPhase("idle");
     setMsgKey((k) => k + 1);
   };
 
+  useEffect(() => {
+    if (phase === "shown") creatureRef.current?.play("greet");
+  }, [phase]);
   // New menu, new starting point for keyboard users.
   useEffect(() => {
-    if (phase === "shown") {
-      creatureRef.current?.play("greet");
-      menuRef.current?.querySelector(".bh-menu-item")?.focus({ preventScroll: true });
-    }
-  }, [phase]);
+    if (confirm) menuRef.current?.querySelector(".bh-menu-item")?.focus({ preventScroll: true });
+  }, [confirm]);
 
   const starter = picked === null ? null : STARTERS[picked];
   const busy = phase === "walking" || phase === "opening";
@@ -103,19 +137,32 @@ export default function StarterLab() {
       ? `${starter.name.toUpperCase()}, the ${starter.type} type! ${starter.blurb} Go with ${starter.name.toUpperCase()}?`
       : busy
         ? `PROF. DINH reaches for the ${starter.type} capsule...`
-        : "Three capsules rest on the table. Which one will you open?";
+        : asked
+          ? ASK
+          : INTRO;
+  const asking = phase === "idle" && asked;
+
+  // YES / NO pop out in their own small panel above the text box, a beat after the
+  // creature's message has finished typing.
+  const onTyped =
+    phase === "shown" && !confirm
+      ? () => later(() => setConfirm(true), prefersReducedMotion() ? 0 : CONFIRM_DELAY_MS)
+      : undefined;
 
   return (
     <section ref={rootRef} className={`bh lab${starter ? ` theme-${starter.theme}` : ""}`}>
       <h1 className="bh-sr">Choose a starter</h1>
       <div className="bh-scene">
-        <div className={`lab-stage${phase === "shown" ? " is-showcase" : ""}`}>
+        <div
+          className={`lab-stage${phase === "shown" ? " is-showcase" : ""}`}
+          style={{ transitionDuration: `${BLUR_MS}ms` }}
+        >
         <SceneBackdrop habitat="lab" />
         <div className="bh-safe">
           <div
             className="lab-trainer"
             aria-hidden="true"
-            style={{ left: px(trainerX - 8), top: px(TRAINER_FEET_Y - 31) }}
+            style={{ left: px(trainerX - 8), top: px(TRAINER_FEET_Y - 31), transitionDuration: `${WALK_MS}ms` }}
           >
             <SpriteSheet ref={trainerRef} slug="trainer" />
           </div>
@@ -158,6 +205,7 @@ export default function StarterLab() {
                 top: px(STAGE.y - 60),
                 "--fx": px(SLOTS[picked] - STAGE.x),
                 "--fy": px(CAPSULE_MOUTH_Y - STAGE.y),
+                animationDuration: `${POP_MS}ms`,
               }}
             >
               <span className="lab-shadow" aria-hidden="true" />
@@ -167,35 +215,51 @@ export default function StarterLab() {
         ) : null}
       </div>
 
-      <TextBox text={message} msgKey={msgKey}>
-        <div className="bh-menu" ref={menuRef} role="group" aria-label="Starter menu">
-          {phase === "shown" ? (
-            <>
-              <Link className="bh-menu-item" to={`/${starter.slug}`} aria-label={`Yes, go with ${starter.name}`}>
-                <span className="bh-cursor" aria-hidden="true">▶</span>
-                YES
-              </Link>
-              <button type="button" className="bh-menu-item" onClick={reset} aria-label="No, put it back">
-                <span className="bh-cursor" aria-hidden="true">▶</span>
-                NO
-              </button>
-            </>
-          ) : (
-            STARTERS.map((s, i) => (
-              <button
-                key={s.slug}
-                type="button"
-                className="bh-menu-item"
-                onClick={() => choose(i)}
-                disabled={busy}
-                aria-label={`Open the ${s.type} capsule`}
-              >
-                <span className="bh-cursor" aria-hidden="true">▶</span>
-                {s.type.toUpperCase()}
-              </button>
-            ))
-          )}
-        </div>
+      <TextBox
+        text={message}
+        msgKey={msgKey}
+        more={intro}
+        className={asking ? "lab-box--stacked" : undefined}
+        onClick={intro ? () => setAsked(true) : undefined}
+        onTyped={onTyped}
+      >
+        {intro || busy ? null : (
+          <div
+            className={`bh-menu lab-menu${asking ? " lab-menu--row" : ""}${
+              phase === "shown" ? ` bh-panel lab-confirm${confirm ? " is-popped" : " is-waiting"}` : ""
+            }`}
+            ref={menuRef}
+            role="group"
+            aria-label="Starter menu"
+          >
+            {phase === "shown" ? (
+              <>
+                <Link className="bh-menu-item" to={`/${starter.slug}`} aria-label={`Yes, go with ${starter.name}`}>
+                  <span className="bh-cursor" aria-hidden="true">▶</span>
+                  YES
+                </Link>
+                <button type="button" className="bh-menu-item" onClick={reset} aria-label="No, put it back">
+                  <span className="bh-cursor" aria-hidden="true">▶</span>
+                  NO
+                </button>
+              </>
+            ) : (
+              STARTERS.map((s, i) => (
+                <button
+                  key={s.slug}
+                  type="button"
+                  className={`bh-menu-item lab-type lab-type--${s.theme}`}
+                  onClick={() => choose(i)}
+                  disabled={busy}
+                  aria-label={`Open the ${s.type} capsule`}
+                >
+                  <span className="bh-cursor" aria-hidden="true">▶</span>
+                  {s.type.toUpperCase()}
+                </button>
+              ))
+            )}
+          </div>
+        )}
       </TextBox>
     </section>
   );

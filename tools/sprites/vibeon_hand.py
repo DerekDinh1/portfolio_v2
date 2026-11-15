@@ -163,13 +163,9 @@ TAIL = rows("""
 57 48 K2
 """)
 
-# Golf flag, ball and a scrap of putting green.
+# Golf pin, ball and a scrap of putting green. The flag flies to the left, downwind of the
+# clouds, and flutters between two shapes.
 PROPS = rows("""
-41 9 K3
-42 9 K R2 K2
-43 9 K R4 K
-44 9 K R2 K2
-45 9 K3
 46 9 K
 47 9 K
 48 9 K
@@ -184,6 +180,22 @@ PROPS = rows("""
 57 3 K Y8 K
 58 4 K8
 """)
+FLAGS = [
+    rows("""
+41 7 K3
+42 5 K2 R2 K
+43 4 K R4 K
+44 5 K2 R2 K
+45 7 K3
+"""),
+    rows("""
+41 7 K3
+42 6 K R2 K
+43 4 K2 R3 K
+44 4 K R3 K2
+45 5 K5
+"""),
+]
 NOTE = rows("""
 12 54 E2
 13 54 E . E
@@ -202,10 +214,11 @@ def stamp(im, layer, dx=0, dy=0):
                 im.putpixel((x, yy), PALETTE[ch] + (255,))
 
 
-def frame(bob=0, tail=0, eyes="open", hop=0, note=None):
+def frame(bob=0, tail=0, eyes="open", hop=0, note=None, flag=0):
     """bob: head down px. tail: tail sideways px. hop: creature up px. note: music note rise px."""
     im = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
     stamp(im, PROPS)
+    stamp(im, FLAGS[flag])
     stamp(im, TAIL, dx=tail, dy=-hop)
     stamp(im, BODY, dy=-hop)
     stamp(im, HEAD, dy=bob - hop)
@@ -218,7 +231,15 @@ def frame(bob=0, tail=0, eyes="open", hop=0, note=None):
     return im
 
 
-I = lambda ms, **kw: (frame(**kw), ms)
+_n = [0]
+
+
+def I(ms, **kw):
+    """One animation frame; the flag flutters on alternate pairs of frames."""
+    _n[0] += 1
+    return frame(flag=(_n[0] // 2) % 2, **kw), ms
+
+
 ANIMS = {
     "idle": [
         I(220), I(200, tail=1), I(200, bob=1, tail=1), I(220, bob=1), I(200, bob=1, tail=-1), I(200, tail=-1),

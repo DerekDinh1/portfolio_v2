@@ -1,5 +1,6 @@
 import { useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import { getSprite } from "./assets.js";
+import { SLOW } from "./timing.js";
 
 // Plays a sprite sheet per the art-bible Sprite contract. Frames advance by
 // mutating a transform on one <img>, so React never re-renders per frame.
@@ -9,6 +10,7 @@ export default function SpriteSheet({ slug, className = "", ref }) {
   const sprite = useMemo(() => getSprite(slug), [slug]);
   const rootRef = useRef(null);
   const imgRef = useRef(null);
+  const ghostRef = useRef(null);
   const engine = useRef(null);
   const [dims, setDims] = useState(null);
   const [failed, setFailed] = useState(false);
@@ -41,9 +43,26 @@ export default function SpriteSheet({ slug, className = "", ref }) {
     const steps = (a) => (a.order ? a.order.length : a.frames.length);
     const column = (a) => (a.order ? a.order[s.frame] : s.frame);
 
+    // Each new frame dissolves in: a copy of the outgoing frame sits on top and fades away,
+    // which takes the tick out of the motion without changing the drawn frames.
+    const ghost = ghostRef.current;
     const draw = () => {
       const a = animations[s.anim];
-      img.style.transform = `translate(calc(var(--px) * ${-column(a) * fw}), calc(var(--px) * ${-a.row * fh}))`;
+      const next = `translate(calc(var(--px) * ${-column(a) * fw}), calc(var(--px) * ${-a.row * fh}))`;
+      const prev = img.style.transform;
+      if (ghost && prev && prev !== next && canRun()) {
+        const ms = (a.frames[column(a)] || a.frames[0]).ms * SLOW;
+        ghost.style.transition = "none";
+        ghost.style.transform = prev;
+        ghost.style.opacity = "1";
+        void ghost.offsetWidth; // restart the fade from fully opaque
+        ghost.style.transition = `opacity ${Math.min(180, ms * 0.7)}ms linear`;
+        ghost.style.opacity = "0";
+      } else if (ghost) {
+        ghost.style.transition = "none";
+        ghost.style.opacity = "0";
+      }
+      img.style.transform = next;
     };
 
     const tick = () => {
@@ -52,7 +71,7 @@ export default function SpriteSheet({ slug, className = "", ref }) {
       draw();
       const a = animations[s.anim];
       if (!canRun() || (a.loop && steps(a) < 2)) return;
-      timer = window.setTimeout(advance, (a.frames[column(a)] || a.frames[0]).ms);
+      timer = window.setTimeout(advance, (a.frames[column(a)] || a.frames[0]).ms * SLOW);
     };
 
     function advance() {
@@ -129,6 +148,18 @@ export default function SpriteSheet({ slug, className = "", ref }) {
         }
         onLoad={(e) => setDims({ w: e.currentTarget.naturalWidth, h: e.currentTarget.naturalHeight })}
         onError={() => setFailed(true)}
+      />
+      <img
+        ref={ghostRef}
+        className="sprite-sheet"
+        src={sprite.url}
+        alt=""
+        draggable={false}
+        style={
+          dims
+            ? { width: `calc(var(--px) * ${dims.w})`, height: `calc(var(--px) * ${dims.h})`, opacity: 0 }
+            : { visibility: "hidden" }
+        }
       />
     </span>
   );

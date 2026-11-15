@@ -139,6 +139,34 @@ def banded(cv: Canvas, edges, roles, dither=True):
             cv.a[b - 1, row] = cv.roles[roles[i + 1]]
 
 
+BAYER4 = (np.array([[0, 8, 2, 10], [12, 4, 14, 6], [3, 11, 1, 9], [15, 7, 13, 5]]) + 0.5) / 16.0
+
+
+def gradient(cv: Canvas, y0, y1, roles, ease=1.0):
+    """Smooth vertical blend from roles[0] at y0 to roles[-1] at y1, then roles[-1] below.
+
+    Neighbouring tones are mixed with a 4x4 ordered dither, so the sky reads as one
+    gradient rather than stacked bands. `ease` > 1 holds the upper tones longer.
+    """
+    xs, ys = grid(cv.w, cv.h)
+    t = np.clip((ys - y0) / max(1, y1 - y0), 0, 1) ** ease * (len(roles) - 1)
+    base = np.floor(t).astype(int)
+    step = (t - base) > BAYER4[ys % 4, xs % 4]
+    idx = np.clip(base + step, 0, len(roles) - 1)
+    ids = np.array([cv.roles[r] for r in roles], np.uint8)
+    cv.a[:, :] = ids[idx]
+
+
+def sky_ramp(pal: dict, names=("sky0", "sky1", "sky2", "sky3", "sky4", "hz"), mids=("sm0", "sm1", "sm2", "sm3", "sm4")):
+    """Add an in-between tone for each pair of sky stops to a palette (in place)."""
+    for m, a, b in zip(mids, names, names[1:]):
+        pal[m] = "#%02X%02X%02X" % q15(mix(hex_rgb(pal[a]), hex_rgb(pal[b]), 0.5))
+    return pal
+
+
+SKY_ROLES = ["sky0", "sm0", "sky1", "sm1", "sky2", "sm2", "sky3", "sm3", "sky4", "sm4", "hz"]
+
+
 def tile_noise(w, h, cell, seed) -> np.ndarray:
     """Seamlessly tileable value noise in [0,1) (periodic lattice, smoothstep).
 
@@ -189,8 +217,18 @@ def colour_set(arrs) -> set:
 
 
 def save_png(rgba: np.ndarray, path: Path):
+    """Write an indexed PNG (exact colours, one transparent entry): far smaller than RGBA for
+    the long animated strips, and pixel-for-pixel identical once decoded."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    Image.fromarray(rgba, "RGBA").save(path, optimize=True)
+    flat = rgba.reshape(-1, 4)
+    colours, index = np.unique(flat, axis=0, return_inverse=True)
+    if len(colours) > 256:
+        Image.fromarray(rgba, "RGBA").save(path, optimize=True)
+        return
+    im = Image.fromarray(index.reshape(rgba.shape[:2]).astype(np.uint8), "P")
+    im.putpalette([int(v) for c in colours for v in c[:3]])
+    clear = [i for i, c in enumerate(colours) if c[3] == 0]
+    im.save(path, optimize=True, **({"transparency": clear[0]} if clear else {}))
 
 
 # --------------------------------------------------------------------------- scene model

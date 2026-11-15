@@ -1,4 +1,4 @@
-"""Fire habitat: a lava lake under a smoking volcano, red-rock mesas and a basalt workshop bank.
+"""Fire habitat: a still lava lake that bubbles, under a smoking volcano, red-rock mesas and a basalt bank.
 
 Same layout and lighting as the water habitat (horizon at row 58, key light top-left,
 platform at 176,80). Day and night share all geometry; only the palette changes.
@@ -10,8 +10,9 @@ import random
 
 import numpy as np
 
-from common import H, W, Canvas, Layer, RoleSet, Variant, banded, checker, grid, periodic_profile, tile_noise
-from habitats.water import LARGE, MEDIUM, SMALL, STARS_DOT, STARS_PLUS, Swell, _runs, lobe
+from common import (BAYER4, H, SKY_ROLES, W, Canvas, Layer, RoleSet, Variant, banded, checker, gradient, grid,
+                    periodic_profile, sky_ramp, tile_noise)
+from habitats.water import LARGE, MEDIUM, SMALL, STARS_DOT, STARS_PLUS, lobe
 from habitats.water import peaks as range_layer
 
 NAME = "fire"
@@ -29,6 +30,7 @@ ROLES = RoleSet([
     "l0", "l1", "l2", "l3", "l4", "lw", "crust", "crust_hi", "crust_dk",
     "b_glow", "b_hi", "b_lit", "b_base", "b_sh", "b_dk",
     "a_hi", "a_lit", "a_dk",
+    "sm0", "sm1", "sm2", "sm3", "sm4",
     "moon", "moon_sh", "glow", "star1", "star2",
 ])
 
@@ -57,7 +59,7 @@ NIGHT = dict(
     a_hi="#B0B8D8", a_lit="#606490", a_dk="#303050",
     moon="#F8F4D0", moon_sh="#C8C8E0", glow="#582848", star1="#F8F4D0", star2="#F0A878",
 )
-PALETTES = {"day": DAY, "night": NIGHT}
+PALETTES = {"day": sky_ramp(DAY), "night": sky_ramp(NIGHT)}
 SMOKE = ["s_hi", "s_lit", "s_base", "s_sh"]
 
 
@@ -69,13 +71,13 @@ def cv(h=H, w=W) -> Canvas:
 def sky(night: bool) -> Canvas:
     sw = WIDE if night else W  # night is 480 wide so the moon is not repeated
     c = cv(H, sw)
-    banded(c, [0, 11, 22, 33, 44, 52], ["sky0", "sky1", "sky2", "sky3", "sky4", "hz"])
+    gradient(c, 0, 56, SKY_ROLES, ease=0.9)        # one smooth blend, top to horizon
     if night:
         mx, my, r = MOON
         xs, ys = grid(sw)
         d2 = (xs - mx) ** 2 + (ys - my) ** 2
-        c.paint(d2 <= (r + 3) ** 2 + (r + 3), "glow")
-        c.paint((d2 > (r + 3) ** 2 + (r + 3)) & (d2 <= (r + 6) ** 2 + (r + 6)) & checker(sw, parity=0), "glow")
+        fall = np.clip(1 - (np.sqrt(d2) - (r + 2)) / 11.0, 0, 1)      # soft halo, thinning out through a dither
+        c.paint(fall > BAYER4[ys % 4, xs % 4], "glow")
         m = d2 <= r * r + r
         c.paint(m, "moon")
         c.paint(m & ~((xs - (mx - 2)) ** 2 + (ys - (my - 2)) ** 2 <= r * r + r), "moon_sh")
@@ -145,7 +147,8 @@ STREAMS = [
     [(374, 25), (373, 29), (375, 33), (372, 38), (373, 43), (369, 48), (370, 57)],
     [(381, 22), (384, 27), (388, 30), (389, 35), (393, 39)],
 ]
-PLUMES = [[(131, 11, 4), (135, 4, 5), (142, -3, 7), (153, -8, 9)], [(376, 19, 3), (380, 13, 4), (387, 6, 6)]]
+# The smoke trails to the left, downwind, the same way the clouds drift.
+PLUMES = [[(131, 11, 4), (127, 4, 5), (120, -3, 7), (109, -8, 9)], [(376, 19, 3), (372, 13, 4), (365, 6, 6)]]
 ROCK = dict(pk_far="v_far", pk_far_sh="v_far_sh", pk_hi="vk_hi", pk_lit="vk_lit", pk_base="vk_base",
             pk_sh="vk_sh", pk_dk="vk_dk")
 
@@ -212,7 +215,6 @@ LADDER = ["l0"] + BANDS + ["crust"]        # hot to cool
 PLATES = [(40, 70, 9, 2), (112, 66, 7, 1), (116, 88, 12, 2), (236, 73, 8, 2), (262, 67, 6, 1), (300, 90, 14, 3),
           (352, 78, 10, 2), (420, 70, 8, 2), (452, 96, 15, 3), (84, 99, 14, 3), (20, 86, 10, 2), (388, 100, 12, 3),
           (196, 100, 11, 2), (6, 62, 5, 1), (330, 63, 6, 1)]
-BUBBLES = [(64, 80, 0), (232, 92, 5), (140, 100, 9), (286, 76, 3), (412, 86, 11), (466, 74, 7), (26, 98, 13)]
 
 
 def _plates():
@@ -229,63 +231,106 @@ def _plates():
     return body, body & ~up, body & ~down, ring
 
 
+def _heat():
+    """Tone index 0..4 (hot to cool) per lava pixel: slow convection cells with glowing seams.
+
+    Nothing travels. Plates of cooler lava sit between brighter seams, hotter toward the horizon haze.
+    """
+    xs, ys = grid(WIDE)
+    row = np.clip(ys - LAVA_Y, 0, 63)
+    stretch = (row * 1.6).astype(int) % 64                       # cells flatten with distance
+    a = tile_noise(WIDE, 64, 16, 51)[stretch, xs]
+    b = tile_noise(WIDE, 64, 8, 52)[(row * 2) % 64, xs]
+    n = 0.7 * a + 0.3 * b
+    depth = np.clip((ys - LAVA_Y) / 52.0, 0, 1)
+    seam = np.abs(n - 0.5)                                         # near 0 on the lines between cells
+    tone = np.full((H, WIDE), 2, np.int32)
+    tone[n > 0.60] = 3
+    tone[n > 0.74] = 4
+    tone[seam < 0.045] = 1
+    tone[seam < 0.016] = 0
+    tone = np.clip(tone + (depth > 0.55).astype(int) - (depth < 0.12).astype(int), 0, 4)
+    return tone, seam, n
+
+
+# (x, y, size, phase): size 1 = small pop, 2 = medium, 3 = big blister. A few hug the rock slab
+# the creature stands on (centre 176,80) and the near bank, where gas escapes along the edge.
+BUBBLES = [(64, 80, 2, 0), (232, 92, 3, 5), (140, 100, 3, 9), (30, 70, 1, 3), (96, 72, 2, 11), (118, 90, 2, 7),
+           (126, 80, 2, 13), (152, 95, 1, 2), (196, 96, 2, 6), (226, 80, 2, 10), (212, 66, 1, 14), (164, 64, 1, 8),
+           (20, 96, 3, 12), (76, 104, 2, 4), (104, 62, 1, 1), (46, 62, 1, 15),
+           (286, 76, 2, 3), (412, 86, 3, 11), (466, 74, 2, 7), (330, 98, 3, 1), (368, 68, 1, 13), (448, 102, 2, 5),
+           (306, 64, 1, 9), (392, 104, 2, 15)]
+EMBERS = [(40, 60, 0), (88, 59, 5), (150, 60, 10), (206, 59, 2), (232, 60, 13), (120, 59, 7),
+          (270, 60, 4), (330, 59, 12), (396, 60, 8), (452, 59, 1)]
+
+
+def _bubble(c: Canvas, x, y, size, st):
+    """One bubble's life over the 16-frame loop: swell into a dome, burst, spatter, and a ring that fades."""
+    r = size
+    if st == 0:
+        c.put(x, y, "lw")
+    elif st == 1:
+        c.hline(x - 1, x + 1, y, "l0")
+        c.put(x, y - 1, "lw")
+    elif st in (2, 3):                                             # full dome with a lit crown and a dark foot
+        grow = 0 if st == 2 else 1
+        w = r + grow
+        for j in range(r + 1):
+            half = max(0, w - j)
+            c.hline(x - half, x + half, y - j, "l0")
+        c.put(x - max(0, w - 1), y - 1, "lw")
+        c.put(x, y - r, "lw")
+        c.hline(x - w, x + w, y + 1, "l4")
+    elif st == 4:                                                  # the skin splits
+        for dx, dy in ((-r - 1, -1), (r + 1, -1), (0, -r - 1), (-r, -r), (r, -r)):
+            c.put(x + dx, y + dy, "lw")
+        c.hline(x - r, x + r, y, "l0")
+    elif st == 5:                                                  # droplets fly out and up
+        for dx, dy in ((-r - 2, -2), (r + 2, -2), (-1, -r - 3), (r + 1, -r - 2), (-r - 1, -r - 1)):
+            c.put(x + dx, y + dy, "l0")
+        c.hline(x - r, x + r, y, "l1")
+    elif st == 6:                                                  # they fall back; a ring opens where it burst
+        for dx, dy in ((-r - 3, 0), (r + 3, 0), (r + 2, -r)):
+            c.put(x + dx, y + dy, "l1")
+        c.hline(x - r - 1, x - r, y, "l0")
+        c.hline(x + r, x + r + 1, y, "l0")
+    elif st == 7:
+        c.hline(x - r - 2, x - r - 1, y + 1, "l1")
+        c.hline(x + r + 1, x + r + 2, y + 1, "l1")
+
+
 def lava() -> Canvas:
     c = cv(H * FRAMES, WIDE)
     xs, ys = grid(WIDE)
-    rng = random.Random(17)
-    edge_sw = [Swell(rng, la, lb) for la, lb in ((12, 20), (16, 30), (24, 40))]
-    lines = []
-    y, i = LAVA_Y + 2, 0
-    while y < 124:
-        depth = min(1.0, (y - LAVA_Y) / 50)
-        la = (8, 10, 12, 15, 16, 20, 24)[min(6, int(depth * 5) + rng.randint(0, 2))]
-        lines.append(dict(y=y, sw=Swell(rng, la, rng.choice((12, 16, 20, 24, 30))), amp=0.6 + 1.2 * depth,
-                          hot=i % 3 != 2, noise=tile_noise(WIDE, 1, (16, 24, 40)[min(2, int(depth * 3))], 60 + i)[0],
-                          ex=rng.random() * math.tau, el=(24, 30, 40, 48, 60)[min(4, int(depth * 4) + 1)]))
-        y += 2 + int(round(depth * 2))
-        i += 1
+    tone, seam, n = _heat()
     body, top, bottom, ring = _plates()
     ring_y, ring_x = np.nonzero(ring)
+    lava_px = ys >= LAVA_Y
+    ids = np.array([ROLES[r] for r in ("l0", "l1", "l2", "l3", "l4")], np.uint8)
+    phase = (n * 16).astype(int)                                   # every seam pulses on its own beat
 
     for f in range(FRAMES):
         oy = f * H
-        t = f / FRAMES
-        band = np.zeros((H, WIDE), np.int32)
-        for b in range(1, len(BANDS)):
-            edge = EDGES[b] - np.rint((0.8 + 0.5 * b) * edge_sw[b - 1].height(f)).astype(int)
-            band += ys >= edge[None, :]
-        for b, role in enumerate(BANDS):
-            c.a[oy:oy + H][(band == b) & (ys >= LAVA_Y)] = ROLES[role]
-        for ln in lines:
-            h = ln["sw"].height(f)
-            env = ln["noise"] + 0.22 * np.sin(math.tau * (np.arange(WIDE) / ln["el"] - t) + ln["ex"]) + 0.18 * h
-            on = _runs(env > np.quantile(ln["noise"], 0.56 if ln["hot"] else 0.66), 3)
-            yy = ln["y"] - np.rint(ln["amp"] * h).astype(int)
-            for x in np.nonzero(on)[0]:
-                if not LAVA_Y < yy[x] < H:
-                    continue
-                k = LADDER.index(BANDS[band[yy[x], x]])
-                role = LADDER[k - 1] if ln["hot"] else LADDER[min(k + 1, len(BANDS))]
-                if ln["hot"] and h[x] > 0.55 and k <= 2:
-                    role = "lw"
-                c.put(x, yy[x] + oy, role)
         fr = c.a[oy:oy + H]
+        t = tone.copy()
+        glow = ((f + phase) % FRAMES) < 5                          # the seams brighten and dim in place
+        t[(seam < 0.045) & ~glow & (t <= 1)] += 1
+        t[(seam >= 0.045) & (seam < 0.07) & glow & (t == 2)] = 1
+        fr[lava_px] = ids[np.clip(t, 0, 4)][lava_px]
         fr[body] = ROLES["crust"]
         fr[top] = ROLES["crust_hi"]
         fr[bottom] = ROLES["crust_dk"]
-        hot = (ring_x + ring_y * 3 + f // 2) % 4 != 0             # the glowing seam shimmers
+        hot = (ring_x + ring_y * 3 + f // 2) % 4 != 0              # the molten rim round each plate shimmers
         fr[ring_y[hot], ring_x[hot]] = ROLES["l0"]
-        for x, y, ph in BUBBLES:
+        view = Canvas(WIDE, H, ROLES)
+        view.a = fr
+        for x, y, size, ph in BUBBLES:
+            if not body[y, x]:
+                _bubble(view, x, y, size, (f + ph) % FRAMES)
+        for x, y, ph in EMBERS:                                    # sparks rise and drift left on the wind
             st = (f + ph) % FRAMES
-            if st < 4:
-                c.put(x, y + oy, "lw")
-            elif st < 7:
-                for dx, dy in ((-1, 0), (1, 0), (0, -1)):
-                    c.put(x + dx, y + dy + oy, "l0")
-                c.put(x, y + oy, "lw")
-            elif st < 9:
-                for dx, dy in ((-2, -1), (2, -1), (0, -2)):
-                    c.put(x + dx, y + dy + oy, "lw")
+            if st < 12:
+                view.put(x - st // 2, y - st * 2, "lw" if st < 3 else "l0" if st < 7 else "l2" if st < 10 else "l3")
     return c
 
 

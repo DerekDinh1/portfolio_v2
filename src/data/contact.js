@@ -4,7 +4,7 @@ export const CONTACT = {
 };
 
 export const CONTACT_BLURB = {
-  professional: "Hiring for senior IT, systems, or IT automation? Let's talk.",
+  professional: "Hiring for senior IT operations, systems, or automations? Let's talk.",
   projects: "Want to pair on a build, or poke at the source? I'm around.",
   personal: "Movie recommendation? I'll trade you one.",
 };

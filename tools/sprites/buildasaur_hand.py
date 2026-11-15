@@ -188,41 +188,53 @@ TAIL = rows("""
 51 44 oyYKKK
 52 45 KK
 """)
+# The tail tip (rows 33-37) burns inside the base of the flame, like a torch; the flame is
+# drawn over the tail. Tips lean left, with the wind that moves the clouds.
 FLAMES = [
     rows("""
-26 52 o
-27 52 oo
-28 52 oOo
-29 51 oOLOo
-30 50 oOLYLo
-31 50 oOLYYOo
-32 50 oOOLYOo
-33 50 ooOO
-34 50 .oO
-35 51 o
-"""),
-    rows("""
-27 54 o
-28 53 oo
-29 52 oOLo
-30 51 oOLLOo
-31 50 oOLYYOo
-32 50 oOLYYLo
-33 50 oOOO
-34 50 ooO
-35 51 o
-"""),
-    rows("""
 25 53 o
-27 53 o
-28 52 oOo
-29 52 oLOo
-30 51 oOYLOo
-31 51 oLYYOo
-32 50 oOOYLOo
-33 50 .oOO
-34 50 ooO
-35 50 o
+26 52 oo
+27 52 oOo
+28 51 oOLOo
+29 50 oOLYLOo
+30 50 oOLYYLOo
+31 49 oOLYYYLOo
+32 49 oOLYYYLOo
+33 49 oOLLYYLOo
+34 50 oOLLLLOo
+35 50 oOOLLOOo
+36 51 oOOOOo
+37 51 oooooo
+"""),
+    rows("""
+26 51 o
+27 51 oo
+28 51 oOo
+29 50 oOLOo
+30 50 oOLYLOo
+31 49 oOLYYYLOo
+32 49 oOLYYYLOo
+33 50 oOLYYLOo
+34 50 oOLLLLOo
+35 50 oOOLLOOo
+36 51 oOOOOo
+37 51 oooooo
+"""),
+    rows("""
+23 52 o
+25 52 o
+26 52 oo
+27 51 oOLo
+28 51 oOLOo
+29 50 oOLYLOo
+30 49 oOLYYYLOo
+31 49 oOLYYYLOo
+32 50 oOLYYLOo
+33 50 oOLLYLOo
+34 50 oOLLLLOo
+35 51 oOLLOo
+36 51 oOOOOo
+37 51 oooooo
 """),
 ]
 
@@ -238,8 +250,8 @@ def stamp(im, layer, dx=0, dy=0):
 def frame(bob=0, flame=0, crest=0, eyes="open", lift=0, hop=0, spark=False):
     """bob: head down px. flame: tail flame frame. lift: wrench arm up px. hop: whole sprite up px."""
     im = Image.new("RGBA", (SIZE, SIZE), (0, 0, 0, 0))
-    stamp(im, FLAMES[flame], dy=-hop)
     stamp(im, TAIL, dy=-hop)
+    stamp(im, FLAMES[flame], dy=-hop)
     stamp(im, BODY, dy=-hop)
     stamp(im, HEAD, dy=bob - hop)
     if crest:

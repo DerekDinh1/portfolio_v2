@@ -32,8 +32,8 @@
           "file": "day/30-water.png",
           "w": 480,
           "drift": 0,
-          "frames": 16,
-          "fps": 8
+          "frames": 32,
+          "fps": 3
         },
         {
           "file": "day/40-shore.png",
@@ -71,15 +71,15 @@
           "file": "night/30-water.png",
           "w": 480,
           "drift": 0,
-          "frames": 16,
-          "fps": 8
+          "frames": 32,
+          "fps": 3
         },
         {
           "file": "night/35-moonpath.png",
           "w": 480,
           "drift": 0,
           "frames": 8,
-          "fps": 8
+          "fps": 3
         },
         {
           "file": "night/40-shore.png",

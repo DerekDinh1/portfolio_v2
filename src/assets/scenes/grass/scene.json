@@ -37,8 +37,8 @@
           "file": "day/30-meadow.png",
           "w": 480,
           "drift": 0,
-          "frames": 16,
-          "fps": 8
+          "frames": 32,
+          "fps": 2
         },
         {
           "file": "day/40-shore.png",
@@ -81,8 +81,8 @@
           "file": "night/30-meadow.png",
           "w": 480,
           "drift": 0,
-          "frames": 16,
-          "fps": 8
+          "frames": 32,
+          "fps": 2
         },
         {
           "file": "night/40-shore.png",

@@ -12,8 +12,8 @@ import random
 
 import numpy as np
 
-from common import (H, W, Canvas, Layer, RoleSet, Variant, banded, checker, grid,
-                    open_profile, periodic_profile, tile_noise)
+from common import (BAYER4, H, SKY_ROLES, W, Canvas, Layer, RoleSet, Variant, banded, checker, gradient, grid,
+                    open_profile, periodic_profile, sky_ramp, tile_noise)
 
 NAME = "water"
 WATER_Y = 58           # first lake row
@@ -32,6 +32,7 @@ ROLES = RoleSet([
     "g_hi", "g_lit", "g_base", "g_sh", "bk",
     "t_hi", "t_lit", "t_base", "t_dk", "tr_lit", "tr_dk",
     "d_hi", "d_lit", "d_sh", "d_dk",
+    "sm0", "sm1", "sm2", "sm3", "sm4",
     "moon", "moon_sh", "glow", "mp", "mp2", "star1", "star2",
 ])
 
@@ -70,7 +71,7 @@ NIGHT = dict(
     moon="#F8F4D0", moon_sh="#C8C8E0", glow="#3C58A0", mp="#F8F4D0", mp2="#B0F0F8",
     star1="#F8F4D0", star2="#B0F0F8",
 )
-PALETTES = {"day": DAY, "night": NIGHT}
+PALETTES = {"day": sky_ramp(DAY), "night": sky_ramp(NIGHT)}
 
 
 def cv(h=H, w=W) -> Canvas:
@@ -167,14 +168,15 @@ def clump(c: Canvas, cx, base, lobes, shadow_mask=None):
 def sky(night: bool) -> Canvas:
     sw = WIDE if night else W  # night is 480 wide so the moon is not repeated
     c = cv(H, sw)
-    banded(c, [0, 11, 22, 33, 44, 52], ["sky0", "sky1", "sky2", "sky3", "sky4", "hz"])
+    gradient(c, 0, 56, SKY_ROLES, ease=0.9)        # one smooth blend, top to horizon
     if night:
         mx, my, r = MOON
         xs, ys = grid(sw)
         d2 = (xs - mx) ** 2 + (ys - my) ** 2
-        c.paint(d2 <= (r + 3) ** 2 + (r + 3), "glow")
-        ring = (d2 > (r + 3) ** 2 + (r + 3)) & (d2 <= (r + 6) ** 2 + (r + 6)) & checker(sw, parity=0)
-        c.paint(ring, "glow")
+        # soft halo: solid near the moon, thinning out through an ordered dither
+        dist = np.sqrt(d2)
+        fall = np.clip(1 - (dist - (r + 2)) / 11.0, 0, 1)
+        c.paint(fall > BAYER4[ys % 4, xs % 4], "glow")
         m = d2 <= r * r + r
         c.paint(m, "moon")
         lit = (xs - (mx - 2)) ** 2 + (ys - (my - 2)) ** 2 <= r * r + r
@@ -440,11 +442,11 @@ SPARKS = [(30, 64), (96, 68), (122, 99), (58, 100), (250, 66), (318, 76), (398, 
 BANDS = ["w0", "w1", "w2", "w3", "w4"]
 BAND_EDGES = [WATER_Y, 66, 76, 88, 100]
 LADDER = ["wv"] + BANDS + ["dock_shadow"]     # light to dark; a band's neighbours are one step either way
-WATER_FRAMES = 16
+WATER_FRAMES = 32         # a long, slow loop: the swell drifts only a little faster than the clouds
 TRI = (0, 1, 2, 1, 0, -1, -2, -1)
 # wavelengths that divide the 480px layer, so every swell tiles; each travels exactly one
 # wavelength per loop, so long swells near the shore move faster than the short far ones
-LAMBDAS = [8, 10, 12, 15, 16, 20, 24, 30, 32, 40, 48, 60]
+LAMBDAS = [8, 10, 12, 15, 16, 20, 24, 30, 32, 40, 40, 40]   # nothing longer than 40, to cap the speed
 
 
 def _moon_path():
@@ -476,8 +478,9 @@ class Swell:
 
     def height(self, f):
         t = f / WATER_FRAMES
-        return (0.65 * np.sin(math.tau * (self.x / self.la - t) + self.pa)
-                + 0.35 * np.sin(math.tau * (self.x / self.lb - self.kb * t) + self.pb))
+        # "+ t": the shape slides toward smaller x, right to left, with the wind that drifts the clouds
+        return (0.65 * np.sin(math.tau * (self.x / self.la + t) + self.pa)
+                + 0.35 * np.sin(math.tau * (self.x / self.lb + self.kb * t) + self.pb))
 
 
 def _swell_rows():
@@ -539,12 +542,12 @@ def water(ridge_mask: np.ndarray, peak_mask: np.ndarray) -> Canvas:
     rng = random.Random(7)
     # the lines between water tones are travelling swells too, taller toward the shore
     edge_sw = [None] + [(Swell(rng, la, lb), amp) for la, lb, amp in
-                        [(12, 20, 1.0), (16, 30, 1.3), (24, 40, 1.7), (32, 48, 2.1)]]
+                        [(12, 20, 1.0), (16, 30, 1.3), (24, 40, 1.7), (30, 40, 2.1)]]
     gap_r, gap_p = Swell(rng, 12, 20), Swell(rng, 16, 24)   # reflections ripple instead of sitting in level stripes
     rows = _swell_rows()
     # one envelope threshold per row, taken over the whole loop, so coverage stays steady frame to frame
     for r in rows:
-        env = np.stack([r["noise"] + 0.22 * np.sin(math.tau * (cols / r["el"] - f / frames) + r["ex"])
+        env = np.stack([r["noise"] + 0.22 * np.sin(math.tau * (cols / r["el"] + f / frames) + r["ex"])
                         + 0.18 * r["sw"].height(f) for f in range(frames)])
         r["env"], r["cut"] = env, np.quantile(env, 1 - r["cover"])
     for f in range(frames):
@@ -599,8 +602,57 @@ def water(ridge_mask: np.ndarray, peak_mask: np.ndarray) -> Canvas:
                     fr.put(sx + dx, sy + dy, "spark2")
             elif st == 3:
                 fr.put(sx, sy, "spark2")
+        _splashes(fr, f, frames)
         out.a[f * H:(f + 1) * H] = fr.a
     return out
+
+
+def _splashes(fr: Canvas, f: int, frames: int):
+    """Where the water meets something: wash round the island, wakes at the dock posts, surf on the beach."""
+    # island (platform at 176,80; 48x12 radii): broken foam that creeps round the rim
+    cx, cy = 175.5, 79.5
+    for seg in range(72):
+        th = math.tau * seg / 72
+        ph = (seg + f // 2) % 6
+        if ph < 2:
+            fr.put(round(cx + 49.6 * math.cos(th)), round(cy + 13.0 * math.sin(th)), "foam")
+        if ph == 0 and seg % 2 == 0:
+            fr.put(round(cx + 51.6 * math.cos(th)), round(cy + 14.4 * math.sin(th)), "wv")
+    # the waves arrive from the right, so that edge throws a little spray
+    for k, (x, y) in enumerate(((227, 81), (229, 78), (226, 76), (230, 83), (228, 74))):
+        st = (f + 3 * k) % frames
+        if st in (0, 1):
+            fr.put(x, y, "hl")
+        elif st in (2, 3):
+            fr.put(x, y - 1, "hl")
+            fr.put(x + 1, y, "spark2")
+        elif st == 4:
+            fr.put(x, y - 2, "spark2")
+    # dock posts: a ring opens round each base, and a short wake trails downwind (left)
+    for i, px in enumerate(DOCK_POSTS):
+        ph = (f // 2 + i * 3) % 8
+        if ph == 0:
+            fr.hline(px - 2, px + 3, 103, "foam")
+        elif ph in (1, 2):
+            fr.hline(px - 3, px - 1, 104, "wv")
+            fr.hline(px + 2, px + 4, 104, "wv")
+        elif ph in (3, 4):
+            fr.hline(px - 5, px - 4, 105, "spark2")
+            fr.hline(px + 5, px + 6, 105, "spark2")
+        if ph % 2 == 0:
+            fr.hline(px - 4, px - 2, 102, "wv")
+    # beach: a thin line of surf slides up the sand and drains back once per loop
+    top = periodic_profile(SHORE_TOP, WIDE)
+    run = tile_noise(WIDE, 1, 8, 77)[0]
+    reach = round(1.5 - 1.5 * math.cos(math.tau * f / frames))          # 0..3 rows up the beach and back
+    for x in range(WIDE):
+        y = int(top[x]) - 1 - reach
+        if run[(x + f) % WIDE] > 0.34:
+            fr.put(x, y, "foam")
+        elif reach >= 2:
+            fr.put(x, y, "wv")
+        if f >= frames // 2 and reach >= 1 and (x + f) % 3 == 0:        # thin sheen left behind as it drains
+            fr.put(x, y - 1, "wv")
 
 
 def moonpath() -> Canvas:
@@ -619,12 +671,16 @@ def moonpath() -> Canvas:
 
 
 # ----------------------------------------------------------------------------- shore
+SHORE_TOP = [(0, 106), (30, 105), (70, 107), (110, 106), (150, 105), (190, 107), (240, 106),
+             (270, 105), (310, 107), (350, 106), (390, 105), (430, 107), (480, 106)]
+DOCK_POSTS = (70, 82, 94, 106)
+
+
 def shore() -> Canvas:
     w = WIDE
     c = cv(H, w)
     xs, ys = grid(w)
-    s_top = periodic_profile([(0, 106), (30, 105), (70, 107), (110, 106), (150, 105), (190, 107), (240, 106),
-                              (270, 105), (310, 107), (350, 106), (390, 105), (430, 107), (480, 106)], w)
+    s_top = periodic_profile(SHORE_TOP, w)
     land = open_profile([(4, 104), (10, 96), (18, 91), (40, 87), (60, 88), (68, 90), (76, 95),
                          (84, 99), (92, 103), (98, 106)], w)
     # dock cast shadow on the water: deck strip, thrown right/down; posts add short diagonal strokes
@@ -632,7 +688,7 @@ def shore() -> Canvas:
         c.put(x, 95, "dock_shadow")
         if x % 2 == 0:
             c.put(x, 96, "dock_shadow")
-    for px in (70, 82, 94, 106):
+    for px in DOCK_POSTS:
         for k in range(6):
             c.put(px + 2 + k, 100 + k // 2 + 1, "dock_shadow")
     # knoll: grass with lit top and shadowed bank; right slope faces away from the light
@@ -716,7 +772,7 @@ def shore() -> Canvas:
     clump(c, 64, int(land[64]) + 2, [(-3, 0, 4), (2, -1, 5), (5, 1, 3)], m)
     clump(c, 8, int(land[8]) + 3, [(-1, 0, 3), (3, 1, 3)], m)
     # weathered dock: deck 90-93, posts, tall mooring post
-    for px in (70, 82, 94, 106):
+    for px in DOCK_POSTS:
         for y in range(94, 102):
             c.put(px, y, "d_lit")
             c.put(px + 1, y, "d_dk")
@@ -801,9 +857,9 @@ def build(variant: str) -> Variant:
         add("05-stars.png", stars(), frames=4, fps=3)
     add("10-clouds.png", clouds(), drift=-2)
     add("15-horizon.png", horizon_clouds())
-    add("30-water.png", water(none, np.zeros((H, WIDE), bool)), frames=WATER_FRAMES, fps=8)
+    add("30-water.png", water(none, np.zeros((H, WIDE), bool)), frames=WATER_FRAMES, fps=3)
     if night:
-        add("35-moonpath.png", moonpath(), frames=8, fps=8)
+        add("35-moonpath.png", moonpath(), frames=8, fps=3)
     add("40-shore.png", shore())
     v.platform = platform().to_rgba(pal)
     v.platform_file = f"{variant}/platform.png"
