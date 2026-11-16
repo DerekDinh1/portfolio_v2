@@ -1,18 +1,9 @@
-/**
- * Title-screen media loaders.
- * Mascot loops use animated WebP with real alpha (see starters.js / MascotSprite).
- * Magenta-keyed MOV/WebM are intentionally unused — Safari paints their matte pink.
- */
+/** Title-screen media. */
+import dayPoster from "../assets/title-bg.webp";
+import nightPoster from "../assets/title-bg-night.webp";
 
-export function loadTitlePosters() {
-  return Promise.all([
-    import("../assets/title-bg.jpg"),
-    import("../assets/title-bg-night.jpg"),
-  ]).then(([day, night]) => ({
-    day: day.default,
-    night: night.default,
-  }));
-}
+// Plain URLs: nothing is fetched until a poster is put on screen.
+export const TITLE_POSTERS = { day: dayPoster, night: nightPoster };
 
 export function loadTitleVideos() {
   return Promise.all([

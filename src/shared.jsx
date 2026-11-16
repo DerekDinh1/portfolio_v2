@@ -181,61 +181,6 @@ export function SeamlessAmbienceVideo({ src, poster, className, active }) {
   );
 }
 
-// Game-style sprite motion: the crisp still art is animated with transforms
-// (breathing/sway at idle, a squash-and-hop "cry" on "hi"), the way handheld
-// Pokémon games animate battle sprites. Unlike the old video-derived loops this
-// never morphs, never shows a loop seam, and runs at the display's frame rate.
-// loop: "idle" | "hi". `cue` replays the hop each time it changes.
-export function MascotSprite({ starter, loop = "idle", cue = 0, className = "", alt }) {
-  const [src, setSrc] = useState(null);
-  const artRef = useRef(null);
-  const motion = loop === "hi" ? "hi" : "idle";
-
-  useEffect(() => {
-    let cancelled = false;
-    starter
-      .loadImg()
-      .then((mod) => {
-        if (!cancelled) setSrc(mod.default);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, [starter]);
-
-  // A repeat tap while already in "hi" doesn't change the class, so restart
-  // the CSS animations by hand.
-  useEffect(() => {
-    if (!cue || motion !== "hi") return;
-    artRef.current?.getAnimations?.().forEach((a) => {
-      a.cancel();
-      a.play();
-    });
-  }, [cue, motion]);
-
-  return (
-    <span
-      className={`mascot mascot--${starter.slug} ${className}`}
-      data-motion={motion}
-      role={src ? undefined : "img"}
-      aria-label={src ? undefined : alt}
-    >
-      {src ? (
-        <img
-          ref={artRef}
-          className="mascot-art"
-          src={src}
-          alt={alt}
-          decoding="async"
-          fetchPriority="high"
-          draggable={false}
-        />
-      ) : null}
-    </span>
-  );
-}
-
 export function Contact({ variant }) {
   const navigate = useNavigate();
   const blurb =

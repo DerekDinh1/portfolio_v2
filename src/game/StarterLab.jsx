@@ -47,6 +47,7 @@ export default function StarterLab() {
   const trainerRef = useRef(null);
   const creatureRef = useRef(null);
   const menuRef = useRef(null);
+  const returnFocus = useRef(null); // index of the type to focus once NO puts it back
   const timers = useRef([]);
   const [picked, setPicked] = useState(null);
   const [phase, setPhase] = useState("idle"); // idle | walking | opening | shown
@@ -115,6 +116,7 @@ export default function StarterLab() {
   );
 
   const reset = () => {
+    returnFocus.current = picked;
     setPicked(null);
     setConfirm(false);
     setCapFrame(0);
@@ -129,6 +131,13 @@ export default function StarterLab() {
   useEffect(() => {
     if (confirm) menuRef.current?.querySelector(".bh-menu-item")?.focus({ preventScroll: true });
   }, [confirm]);
+  // NO removes the button that had focus; hand focus to the type that was just put back,
+  // so a keyboard user carries on from where they were.
+  useEffect(() => {
+    if (phase !== "idle" || returnFocus.current === null) return;
+    menuRef.current?.querySelectorAll(".bh-menu-item")[returnFocus.current]?.focus({ preventScroll: true });
+    returnFocus.current = null;
+  }, [phase]);
 
   const starter = picked === null ? null : STARTERS[picked];
   const busy = phase === "walking" || phase === "opening";

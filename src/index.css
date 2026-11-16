@@ -529,13 +529,6 @@ html[data-time="night"] .nameplate { border-color: var(--p-line); }
   image-rendering: pixelated;
   transition: opacity 0.9s ease;
 }
-.title-bg-video {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  object-position: center;
-  background: transparent;
-}
 .title-ambience {
   overflow: hidden;
 }
@@ -557,7 +550,6 @@ html[data-time="night"] .nameplate { border-color: var(--p-line); }
 .title-screen.is-night .title-bg-day { opacity: 0; }
 .title-screen.is-night .title-bg-night { opacity: 1; }
 .title-screen:not(.reduced) .title-bg-still { z-index: 0; }
-.title-screen:not(.reduced) .title-bg-video,
 .title-screen:not(.reduced) .title-ambience { z-index: 2; }
 .title-skyfx {
   position: absolute;
@@ -731,56 +723,6 @@ html[data-time="night"] .nameplate { border-color: var(--p-line); }
 @keyframes press-blink {
   0%, 60% { opacity: 1; }
   61%, 100% { opacity: 0.7; }
-}
-
-/* ---------- mascot sprite motion ----------
-   Battle-sprite style: the art stays planted at its feet and moves with
-   transforms only, so it stays sharp and runs on the compositor.
-   idle = breathe + sway loop; hi = anticipation squash, hop, land, settle,
-   then back to idle. Each starter tunes the same moves to its personality. */
-.mascot {
-  display: block;
-  --m-breathe: 3.2s;   /* one inhale/exhale */
-  --m-stretch: 1.024;  /* inhale height */
-  --m-squeeze: 0.988;  /* inhale width */
-  --m-sway: 0.8deg;
-  --m-hop: -11%;       /* hop height, as a share of the sprite */
-}
-.mascot--professional { --m-breathe: 3.4s; --m-stretch: 1.02; --m-sway: 0.6deg; --m-hop: -9%; }
-.mascot--projects { --m-breathe: 2.3s; --m-stretch: 1.032; --m-squeeze: 0.982; --m-sway: 1deg; --m-hop: -12%; }
-.mascot--personal { --m-breathe: 3.8s; --m-stretch: 1.018; --m-sway: 1.6deg; --m-hop: -8%; }
-.mascot-art {
-  display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  transform-origin: 50% 96%;
-  filter: drop-shadow(var(--sprite-shadow));
-  will-change: transform;
-  user-select: none;
-  -webkit-user-drag: none;
-}
-.mascot[data-motion="idle"] .mascot-art {
-  animation: mascot-breathe calc(var(--m-breathe) * 2) ease-in-out infinite;
-}
-.mascot[data-motion="hi"] .mascot-art {
-  animation:
-    mascot-hop 0.9s linear 1,
-    mascot-breathe calc(var(--m-breathe) * 2) ease-in-out 0.9s infinite;
-}
-@keyframes mascot-breathe {
-  0%, 50%, 100% { transform: rotate(0deg) scale(1, 1); }
-  25% { transform: rotate(calc(var(--m-sway) * -1)) scale(var(--m-squeeze), var(--m-stretch)); }
-  75% { transform: rotate(var(--m-sway)) scale(var(--m-squeeze), var(--m-stretch)); }
-}
-@keyframes mascot-hop {
-  0% { transform: translateY(0) scale(1, 1); animation-timing-function: ease-out; }
-  14% { transform: translateY(0) scale(1.08, 0.9); animation-timing-function: cubic-bezier(0.2, 0.7, 0.3, 1); }
-  36% { transform: translateY(var(--m-hop)) scale(0.95, 1.07); animation-timing-function: cubic-bezier(0.6, 0, 0.9, 0.5); }
-  52% { transform: translateY(0) scale(1.1, 0.88); animation-timing-function: ease-out; }
-  66% { transform: translateY(calc(var(--m-hop) * 0.3)) scale(0.98, 1.03); animation-timing-function: ease-in; }
-  80% { transform: translateY(0) scale(1.03, 0.97); animation-timing-function: ease-in-out; }
-  100% { transform: translateY(0) scale(1, 1); }
 }
 
 .route-frame {
@@ -1043,7 +985,6 @@ html[data-time="night"] .chip-ai { background: rgba(232, 196, 90, 0.16); color: 
 .proj-show-shot:hover,
 .proj-links a:hover { text-decoration: underline; text-underline-offset: 4px; }
 .proj-show-shot[aria-pressed="true"] { color: var(--ink); }
-.proj-private { color: var(--muted); font-size: var(--fs-label); }
 
 /* personal */
 .fun-intro { font-size: var(--fs-lead); line-height: 1.8; max-width: var(--measure); margin-bottom: var(--s6); }
@@ -1167,6 +1108,5 @@ html[data-time="night"] .chip-ai { background: rgba(232, 196, 90, 0.16); color: 
   .title-press { opacity: 1; }
   .cursor, .type-caret { opacity: 1; transform: none; }
   .btn:active, .title-press:active, .app-carousel-nav:active { transform: none; }
-  .mascot-art { animation: none !important; transform: none; }
   .app-carousel-nav:active { transform: translateY(-50%); }
 }

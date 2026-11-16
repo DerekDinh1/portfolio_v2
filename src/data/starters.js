@@ -2,14 +2,8 @@ export const STARTERS = [
   {
     slug: "professional",
     name: "Resumon",
-    dex: "No. 001",
     type: "Water",
     theme: "water",
-    loadImg: () => import("../assets/mascots/resumon.webp"),
-    loadBackdrop: (night) =>
-      night
-        ? import("../assets/habitats/water-night.jpg")
-        : import("../assets/habitats/water-day.jpg"),
     tagline: "9+ year IT professional. Non-generative human just trying to be friends with AI before it takes over the world.",
     blurb: "Experience, automation, and integrations.",
     // Battle-scene hero data (see src/game/BattleHero.jsx).
@@ -33,14 +27,8 @@ export const STARTERS = [
   {
     slug: "projects",
     name: "Buildasaur",
-    dex: "No. 002",
     type: "Fire",
     theme: "fire",
-    loadImg: () => import("../assets/mascots/buildasaur.webp"),
-    loadBackdrop: (night) =>
-      night
-        ? import("../assets/habitats/fire-night.jpg")
-        : import("../assets/habitats/fire-day.jpg"),
     tagline: "Small apps I build after hours.",
     blurb: "Projects, straight from GitHub.",
     // Battle-scene hero data. Level and the EXP bar (share of projects that are live) are counted from PROJECTS on the page.
@@ -58,14 +46,8 @@ export const STARTERS = [
   {
     slug: "personal",
     name: "Vibeon",
-    dex: "No. 003",
     type: "Grass",
     theme: "grass",
-    loadImg: () => import("../assets/mascots/vibeon.webp"),
-    loadBackdrop: (night) =>
-      night
-        ? import("../assets/habitats/grass-night.jpg")
-        : import("../assets/habitats/grass-day.jpg"),
     tagline: "Anime, golf, games, and Colorado trails.",
     blurb: "The person behind the tickets.",
     // Battle-scene hero data. Level and the EXP bar (picks seen this visit) are counted from RECS on the page.

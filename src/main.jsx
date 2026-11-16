@@ -28,7 +28,8 @@ import {
   CONTACT,
   INTRO,
 } from "./data/index.js";
-import { loadTitlePosters, loadTitleVideos } from "./lib/media.js";
+import { TITLE_POSTERS, loadTitleVideos } from "./lib/media.js";
+import { titleFor } from "./data/pages.js";
 import trainerProfile from "./assets/sprites/trainer/profile.png";
 import {
   EASE_OUT,
@@ -209,20 +210,13 @@ function TitleScreen({ onStart, onSkipIntro }) {
   const reduce = useReducedMotion();
   const { mode } = useTime();
   const night = mode === "night";
-  const [posters, setPosters] = useState(null);
   const [videos, setVideos] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadTitlePosters()
-      .then((loaded) => {
-        if (!cancelled) setPosters(loaded);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // Only the poster and video for the mode on screen are fetched; the other mode's load
+  // the first time the visitor flips the day/night toggle.
+  const [seenDay, setSeenDay] = useState(!night);
+  const [seenNight, setSeenNight] = useState(night);
+  if (!night && !seenDay) setSeenDay(true);
+  if (night && !seenNight) setSeenNight(true);
 
   useEffect(() => {
     if (reduce) return undefined;
@@ -242,33 +236,33 @@ function TitleScreen({ onStart, onSkipIntro }) {
       className={`title-screen${reduce ? " reduced" : ""}${night ? " is-night" : " is-day"}`}
     >
       <div className="title-bg-stack" aria-hidden="true">
-        {posters ? (
-          <>
-            <div
-              className="title-bg title-bg-still title-bg-day"
-              style={{ backgroundImage: `url(${posters.day})` }}
-            />
-            <div
-              className="title-bg title-bg-still title-bg-night"
-              style={{ backgroundImage: `url(${posters.night})` }}
-            />
-          </>
+        {seenDay ? (
+          <div
+            className="title-bg title-bg-still title-bg-day"
+            style={{ backgroundImage: `url(${TITLE_POSTERS.day})` }}
+          />
         ) : null}
-        {!reduce && videos && posters ? (
-          <>
-            <SeamlessAmbienceVideo
-              className="title-bg-day"
-              src={videos.day}
-              poster={posters.day}
-              active={!night}
-            />
-            <SeamlessAmbienceVideo
-              className="title-bg-night"
-              src={videos.night}
-              poster={posters.night}
-              active={night}
-            />
-          </>
+        {seenNight ? (
+          <div
+            className="title-bg title-bg-still title-bg-night"
+            style={{ backgroundImage: `url(${TITLE_POSTERS.night})` }}
+          />
+        ) : null}
+        {!reduce && videos && seenDay ? (
+          <SeamlessAmbienceVideo
+            className="title-bg-day"
+            src={videos.day}
+            poster={TITLE_POSTERS.day}
+            active={!night}
+          />
+        ) : null}
+        {!reduce && videos && seenNight ? (
+          <SeamlessAmbienceVideo
+            className="title-bg-night"
+            src={videos.night}
+            poster={TITLE_POSTERS.night}
+            active={night}
+          />
         ) : null}
       </div>
       <div className="title-skyfx" aria-hidden="true">
@@ -497,6 +491,12 @@ function AnimatedRoutes() {
   const location = useLocation();
   const reduce = useReducedMotion();
   const routeMotion = ROUTE_MOTION[location.pathname] || DEFAULT_ROUTE_MOTION;
+
+  // Each page names itself in the tab, in history and to screen readers.
+  useEffect(() => {
+    document.title = titleFor(location.pathname);
+  }, [location.pathname]);
+
   return (
     <AnimatePresence mode="wait">
       <motion.div

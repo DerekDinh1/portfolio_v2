@@ -9,7 +9,7 @@ npm install
 npm run build
 ```
 
-The build script runs `vite build` and copies `dist/index.html` to `dist/404.html` so client-side routes work on GitHub Pages.
+The build script runs `vite build`, then `scripts/postbuild.mjs` writes one HTML file per route (`professional.html`, `projects.html`, `personal.html`) so direct links answer 200 with their own tab title, plus `404.html` as the fallback for every other path.
 
 Preview locally:
 
