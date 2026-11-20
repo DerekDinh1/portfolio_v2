@@ -1,8 +1,8 @@
 export const STATS = [
-  { n: "9+ yrs", l: "in IT support, security, and systems", bar: 90 },
+  { n: "9+ yrs", l: "in IT support, security, and systems" },
   { n: "70%", l: "of tickets resolved by agentic AI before a human touched them", bar: 70 },
-  { n: "Agentic", l: "workflows built and implemented in production", bar: 85 },
-  { n: "Channels", l: "AI across department platforms and company channels", bar: 80 },
+  { n: "Agentic", l: "workflows built and implemented in production" },
+  { n: "Channels", l: "AI across department platforms and company channels" },
 ];
 
 export const PROFESSIONAL_THROUGLINE =

@@ -1,0 +1,141 @@
+{
+  "frame": {
+    "w": 16,
+    "h": 32
+  },
+  "anchor": {
+    "x": 8,
+    "y": 31
+  },
+  "animations": {
+    "idle": {
+      "row": 0,
+      "loop": true,
+      "order": [
+        0,
+        0,
+        0,
+        3
+      ],
+      "frames": [
+        {
+          "ms": 900
+        },
+        {
+          "ms": 900
+        },
+        {
+          "ms": 900
+        },
+        {
+          "ms": 120
+        }
+      ]
+    },
+    "walk-down": {
+      "row": 0,
+      "loop": true,
+      "order": [
+        1,
+        0,
+        2,
+        0
+      ],
+      "frames": [
+        {
+          "ms": 130
+        },
+        {
+          "ms": 130
+        },
+        {
+          "ms": 130
+        }
+      ]
+    },
+    "walk-up": {
+      "row": 1,
+      "loop": true,
+      "order": [
+        1,
+        0,
+        2,
+        0
+      ],
+      "frames": [
+        {
+          "ms": 130
+        },
+        {
+          "ms": 130
+        },
+        {
+          "ms": 130
+        }
+      ]
+    },
+    "walk-left": {
+      "row": 2,
+      "loop": true,
+      "order": [
+        1,
+        0,
+        2,
+        0
+      ],
+      "frames": [
+        {
+          "ms": 130
+        },
+        {
+          "ms": 130
+        },
+        {
+          "ms": 130
+        }
+      ]
+    },
+    "walk-right": {
+      "row": 3,
+      "loop": true,
+      "order": [
+        1,
+        0,
+        2,
+        0
+      ],
+      "frames": [
+        {
+          "ms": 130
+        },
+        {
+          "ms": 130
+        },
+        {
+          "ms": 130
+        }
+      ]
+    },
+    "interact": {
+      "row": 4,
+      "loop": false,
+      "next": "idle",
+      "order": [
+        0,
+        1,
+        0,
+        1,
+        0,
+        1
+      ],
+      "frames": [
+        {
+          "ms": 140
+        },
+        {
+          "ms": 140
+        }
+      ]
+    }
+  }
+}

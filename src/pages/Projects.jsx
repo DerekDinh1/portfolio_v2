@@ -2,7 +2,8 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { STARTERS, PROJECTS, CONTACT, groupTech } from "../data/index.js";
-import { PageHero, Reveal, Contact } from "../shared.jsx";
+import { Reveal, Contact } from "../shared.jsx";
+import BattleHero from "../game/BattleHero.jsx";
 
 const AUTO_MS = 6000;
 
@@ -282,16 +283,17 @@ function ProjectCard({ p, delay, active, onSelectShot }) {
 
 export default function Projects() {
   const starter = STARTERS[1];
-  const [mascotLoop, setMascotLoop] = useState("idle");
+  const { battle } = starter;
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [autoplay, setAutoplay] = useState(true);
-  const hiTimer = useRef(null);
 
-  useEffect(() => {
-    return () => {
-      if (hiTimer.current) clearTimeout(hiTimer.current);
-    };
-  }, []);
+  const liveCount = useMemo(() => PROJECTS.filter((p) => p.status === "live").length, []);
+  const menu = [
+    { key: "github", label: "GITHUB", ariaLabel: "Open GitHub profile (opens in a new tab)", href: CONTACT.github, newTab: true, play: "action" },
+    { key: "featured", label: "FEATURED", scrollTo: "featured" },
+    { key: "apps", label: "APPS", scrollTo: "apps" },
+    { key: "contact", label: "CONTACT", ariaLabel: "Contact on LinkedIn (opens in a new tab)", href: CONTACT.linkedin, newTab: true },
+  ];
 
   const featured = useMemo(() => PROJECTS.find((p) => p.featured), []);
   const rest = useMemo(() => PROJECTS.filter((p) => p !== featured), [featured]);
@@ -316,33 +318,30 @@ export default function Projects() {
   // Once a visitor steers the carousel, stop auto-advancing under them.
   const stopAutoplay = useCallback(() => setAutoplay(false), []);
 
-  const onMascotActivate = useCallback(() => {
-    setMascotLoop("hi");
-    if (hiTimer.current) clearTimeout(hiTimer.current);
-    hiTimer.current = setTimeout(() => setMascotLoop("idle"), 1200);
-  }, []);
-
   return (
     <main className="page theme-fire">
-      <PageHero
+      <BattleHero
         starter={starter}
-        variant="workbench"
-        mascotLoop={mascotLoop}
-        mascotHref={CONTACT.github}
-        mascotTarget="_blank"
-        mascotRel="noopener noreferrer"
-        mascotLabel={`Open ${starter.name}'s GitHub`}
-        onMascotActivate={onMascotActivate}
-        speech={{
-          name: starter.name.toUpperCase(),
-          text: "Tap me to visit my GitHub!",
-          hint: true,
-          key: "hint-github",
+        habitat={battle.habitat}
+        sprite={battle.sprite}
+        level={PROJECTS.length}
+        bar={{
+          label: "EXP",
+          value: Math.round((liveCount / PROJECTS.length) * 100),
+          text: `${liveCount} of ${PROJECTS.length} projects are live to try`,
         }}
+        status={battle.status}
+        message={battle.message}
+        greetMessage={battle.greetMessage}
+        menu={menu}
       />
       <div className="wrap">
+        <Reveal className="career-throughline" as="section" preset="spark">
+          <p className="career-tagline">{starter.tagline}</p>
+        </Reveal>
+
         {featured ? (
-          <Reveal className="block" as="section" preset="spark">
+          <Reveal className="block" as="section" preset="spark" id="featured">
             <h2 className="block-h">Featured build</h2>
             <div className="proj-featured-wrap">
               <ProjectCard p={featured} delay={0} />
@@ -350,7 +349,7 @@ export default function Projects() {
           </Reveal>
         ) : null}
 
-        <Reveal className="block" as="section" preset="spark">
+        <Reveal className="block" as="section" preset="spark" id="apps">
           <h2 className="block-h">Caught apps</h2>
           <p className="block-sub">Things I build after hours. Grab one off the shelf.</p>
 

@@ -26,21 +26,22 @@ import "./index.css";
 
 import {
   CONTACT,
-  STARTERS,
   INTRO,
 } from "./data/index.js";
-import { loadTitlePosters, loadTitleVideos } from "./lib/media.js";
+import { TITLE_POSTERS, loadTitleVideos } from "./lib/media.js";
+import { titleFor } from "./data/pages.js";
+import trainerProfile from "./assets/sprites/trainer/profile.png";
 import {
   EASE_OUT,
   SeamlessAmbienceVideo,
   RouteFallback,
-  MascotSprite,
 } from "./shared.jsx";
 
 const Professional = lazy(() => import("./pages/Professional.jsx"));
 const Projects = lazy(() => import("./pages/Projects.jsx"));
 const Personal = lazy(() => import("./pages/Personal.jsx"));
 const NotFound = lazy(() => import("./pages/NotFound.jsx"));
+const StarterLab = lazy(() => import("./game/StarterLab.jsx"));
 
 const TimeContext = createContext({ mode: "day", toggle: () => {} });
 
@@ -209,20 +210,13 @@ function TitleScreen({ onStart, onSkipIntro }) {
   const reduce = useReducedMotion();
   const { mode } = useTime();
   const night = mode === "night";
-  const [posters, setPosters] = useState(null);
   const [videos, setVideos] = useState(null);
-
-  useEffect(() => {
-    let cancelled = false;
-    loadTitlePosters()
-      .then((loaded) => {
-        if (!cancelled) setPosters(loaded);
-      })
-      .catch(() => {});
-    return () => {
-      cancelled = true;
-    };
-  }, []);
+  // Only the poster and video for the mode on screen are fetched; the other mode's load
+  // the first time the visitor flips the day/night toggle.
+  const [seenDay, setSeenDay] = useState(!night);
+  const [seenNight, setSeenNight] = useState(night);
+  if (!night && !seenDay) setSeenDay(true);
+  if (night && !seenNight) setSeenNight(true);
 
   useEffect(() => {
     if (reduce) return undefined;
@@ -242,33 +236,33 @@ function TitleScreen({ onStart, onSkipIntro }) {
       className={`title-screen${reduce ? " reduced" : ""}${night ? " is-night" : " is-day"}`}
     >
       <div className="title-bg-stack" aria-hidden="true">
-        {posters ? (
-          <>
-            <div
-              className="title-bg title-bg-still title-bg-day"
-              style={{ backgroundImage: `url(${posters.day})` }}
-            />
-            <div
-              className="title-bg title-bg-still title-bg-night"
-              style={{ backgroundImage: `url(${posters.night})` }}
-            />
-          </>
+        {seenDay ? (
+          <div
+            className="title-bg title-bg-still title-bg-day"
+            style={{ backgroundImage: `url(${TITLE_POSTERS.day})` }}
+          />
         ) : null}
-        {!reduce && videos && posters ? (
-          <>
-            <SeamlessAmbienceVideo
-              className="title-bg-day"
-              src={videos.day}
-              poster={posters.day}
-              active={!night}
-            />
-            <SeamlessAmbienceVideo
-              className="title-bg-night"
-              src={videos.night}
-              poster={posters.night}
-              active={night}
-            />
-          </>
+        {seenNight ? (
+          <div
+            className="title-bg title-bg-still title-bg-night"
+            style={{ backgroundImage: `url(${TITLE_POSTERS.night})` }}
+          />
+        ) : null}
+        {!reduce && videos && seenDay ? (
+          <SeamlessAmbienceVideo
+            className="title-bg-day"
+            src={videos.day}
+            poster={TITLE_POSTERS.day}
+            active={!night}
+          />
+        ) : null}
+        {!reduce && videos && seenNight ? (
+          <SeamlessAmbienceVideo
+            className="title-bg-night"
+            src={videos.night}
+            poster={TITLE_POSTERS.night}
+            active={night}
+          />
         ) : null}
       </div>
       <div className="title-skyfx" aria-hidden="true">
@@ -281,6 +275,7 @@ function TitleScreen({ onStart, onSkipIntro }) {
       <div className="title-inner">
         <p className="title-region">Colorado Region</p>
         <h1 className="title-name">DEREK DINH</h1>
+        <p className="title-role">IT Operations · Automation · AI</p>
         <div className="title-actions">
           <button className="title-press btn-pop" onClick={onStart}>
             Press Start
@@ -294,127 +289,15 @@ function TitleScreen({ onStart, onSkipIntro }) {
   );
 }
 
+// The starter select is a lab scene from the game runtime; it loads on demand so the
+// title screen does not carry the sprite and scene code.
 function StarterSelect() {
-  const [revealed, setRevealed] = useState({});
-  const reduce = useReducedMotion();
-  const timers = useRef([]);
-
-  const warmed = useRef(new Set());
-  // Warm a starter's "hi" loop once the visitor shows intent (hover, focus,
-  // press) instead of pulling every animated loop on page load.
-  const warm = (s) => {
-    if (reduce || warmed.current.has(s.slug)) return;
-    warmed.current.add(s.slug);
-    s.loadHi?.().then((mod) => {
-      const img = new Image();
-      img.src = mod.default;
-    }).catch(() => {});
-  };
-
-  useEffect(() => {
-    STARTERS.forEach((s) => {
-      s.loadImg().then((mod) => {
-        const img = new Image();
-        img.src = mod.default;
-      });
-    });
-    const pending = timers.current;
-    return () => {
-      pending.forEach(clearTimeout);
-    };
-  }, []);
-
-  const reveal = (slug) => {
-    if (revealed[slug]) return;
-    const starter = STARTERS.find((s) => s.slug === slug);
-    if (starter) warm(starter);
-    if (reduce) {
-      setRevealed((r) => ({ ...r, [slug]: true }));
-      return;
-    }
-    setRevealed((r) => ({ ...r, [slug]: "opening" }));
-    const t1 = setTimeout(() => {
-      setRevealed((r) => ({ ...r, [slug]: "popping" }));
-    }, 720);
-    const t2 = setTimeout(() => {
-      setRevealed((r) => ({ ...r, [slug]: true }));
-    }, 1850);
-    timers.current.push(t1, t2);
-  };
-
   return (
-    <section className="select-stage">
-      <h1 className="select-title">Choose a starter</h1>
-      <p className="select-sub">Tap a Poké Ball to see who's inside. You can catch all three.</p>
-      <div className="starter-grid">
-        {STARTERS.map((s) => {
-          const state = revealed[s.slug];
-          const opening = state === "opening";
-          const popping = state === "popping";
-          const open = state === true;
-          return (
-            <div
-              key={s.slug}
-              className={`starter-card ${
-                open
-                  ? `theme-${s.theme} open`
-                  : opening || popping
-                    ? `theme-${s.theme} ${opening ? "opening" : "popping"}`
-                    : "closed"
-              }`}
-            >
-              {open || popping ? (
-                <>
-                  <div className="starter-mascot-wrap">
-                    {popping ? (
-                      <>
-                        <span className="pokeball pokeball-fade" aria-hidden="true" />
-                        <span className="pokeball-burst" aria-hidden="true" />
-                      </>
-                    ) : null}
-                    <MascotSprite
-                      starter={s}
-                      loop="hi"
-                      className={`starter-img${popping ? " emerging" : ""}`}
-                      alt={s.name}
-                    />
-                  </div>
-                  <div
-                    className={`starter-details${open ? " in" : " pending"}`}
-                    aria-hidden={!open}
-                  >
-                    <span className="starter-dex">{s.dex} · {s.type}</span>
-                    <h2 className="starter-name">{s.name}</h2>
-                    <p className="starter-blurb">{s.blurb}</p>
-                    <Link
-                      to={`/${s.slug}`}
-                      className="starter-cta"
-                      tabIndex={open ? 0 : -1}
-                    >
-                      Choose {s.name} →
-                    </Link>
-                  </div>
-                </>
-              ) : (
-                <button
-                  type="button"
-                  className={`pokeball-btn${opening ? " wobbling" : ""}`}
-                  onClick={() => reveal(s.slug)}
-                  onPointerEnter={() => warm(s)}
-                  onPointerDown={() => warm(s)}
-                  onFocus={() => warm(s)}
-                  disabled={opening}
-                  aria-label={`Open ${s.name}, the ${s.type}-type starter`}
-                >
-                  <span className="pokeball" aria-hidden="true" />
-                  {opening ? <span className="pokeball-burst" aria-hidden="true" /> : null}
-                  <span className="pokeball-hint">{s.name}</span>
-                </button>
-              )}
-            </div>
-          );
-        })}
-      </div>
+    <section className="select-lab">
+      <Suspense fallback={<RouteFallback />}>
+        <StarterLab />
+      </Suspense>
+      <p className="select-sub select-lab-sub">Open a capsule to meet who's inside. You can come back for the others.</p>
     </section>
   );
 }
@@ -480,6 +363,14 @@ function IntroDialogue({ step, setStep, onChoose }) {
 
   return (
     <section className="intro-stage">
+      <img
+        className="intro-trainer"
+        src={trainerProfile}
+        width={64}
+        height={64}
+        alt="Derek as a pixel-art trainer: spiky black hair, glasses, teal hoodie and a backpack"
+        draggable={false}
+      />
       <AnimatePresence mode="wait">
         <motion.div
           key={cardKey}
@@ -516,16 +407,18 @@ function IntroDialogue({ step, setStep, onChoose }) {
 }
 
 function Home() {
-  const [scene, setScene] = useState("title");
+  const location = useLocation();
+  // "Back to the lab" links ask for the lab itself; everything else opens on the title screen.
+  const wanted = location.state?.screen === "select" ? "select" : "title";
+  const [scene, setScene] = useState(wanted);
   const [step, setStep] = useState(0);
   const reduce = useReducedMotion();
-  const location = useLocation();
 
   useEffect(() => {
     if (location.pathname !== "/") return;
-    setScene("title");
+    setScene(wanted);
     setStep(0);
-  }, [location.pathname, location.state?.t]);
+  }, [location.pathname, location.state?.t, wanted]);
 
   return (
     <main className="home">
@@ -572,7 +465,7 @@ function Home() {
 }
 
 // Per-route enter variants echo each starter's habitat: a soft rise for
-// water, a quick pop for fire, a gentle rotate-in for grass. Everything
+// water, a quick pop for fire, a gentle settle-in for grass. Everything
 // else (home, 404) keeps the original fade/slide.
 const ROUTE_MOTION = {
   "/professional": {
@@ -586,8 +479,8 @@ const ROUTE_MOTION = {
     transition: { duration: 0.28, ease: "easeOut" },
   },
   "/personal": {
-    initial: { opacity: 0, rotate: -1.5, y: 10 },
-    exit: { opacity: 0, rotate: 1.5, y: -8 },
+    initial: { opacity: 0, scale: 0.985, y: 12 },
+    exit: { opacity: 0, scale: 0.985, y: -8 },
     transition: { duration: 0.5, ease: EASE_OUT },
   },
 };
@@ -601,13 +494,19 @@ function AnimatedRoutes() {
   const location = useLocation();
   const reduce = useReducedMotion();
   const routeMotion = ROUTE_MOTION[location.pathname] || DEFAULT_ROUTE_MOTION;
+
+  // Each page names itself in the tab, in history and to screen readers.
+  useEffect(() => {
+    document.title = titleFor(location.pathname);
+  }, [location.pathname]);
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
         key={location.pathname}
         className="route-frame"
         initial={reduce ? { opacity: 0 } : routeMotion.initial}
-        animate={{ opacity: 1, y: 0, scale: 1, rotate: 0 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
         exit={reduce ? { opacity: 0 } : routeMotion.exit}
         transition={reduce ? { duration: 0.15, ease: EASE_OUT } : routeMotion.transition}
       >

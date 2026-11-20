@@ -9,7 +9,6 @@ const RAW_PROJECTS = [
     url: "https://github.com/DerekDinh1/uvoice",
     linkType: "source",
     featured: true,
-    screenshot: null,
   },
   {
     name: "Between Us",

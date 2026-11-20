@@ -23,3 +23,8 @@ dist-ssr
 generated/
 
 .tmp-pw/
+
+# asset pipeline
+tools/.venv/
+__pycache__/
+*.blend1
