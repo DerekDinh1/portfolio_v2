@@ -62,7 +62,7 @@ export default function NotFound() {
         </div>
         <TextBox text={message} msgKey={searching ? 0 : 1} note="Error 404: this path is not on the map.">
           <div className="bh-menu" role="group" aria-label="Lost menu">
-            <Link className="bh-menu-item" to="/">
+            <Link className="bh-menu-item" to="/" state={{ screen: "select" }}>
               <span className="bh-cursor" aria-hidden="true">▶</span>
               BACK TO LAB
             </Link>
@@ -71,7 +71,7 @@ export default function NotFound() {
       </section>
       <div className="lost-foot">
         <p className="select-sub">Looks like you wandered off the trail. That path doesn't lead anywhere.</p>
-        <Link className="btn btn-red" to="/">← Back to the lab</Link>
+        <Link className="btn btn-red" to="/" state={{ screen: "select" }}>← Back to the lab</Link>
       </div>
     </main>
   );

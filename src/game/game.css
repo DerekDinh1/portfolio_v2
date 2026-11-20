@@ -168,7 +168,8 @@ html[data-time="night"] .bh {
 }
 .bh-menu-item {
   position: relative; display: flex; align-items: center;
-  padding: 0 calc(var(--px) * 2) 0 calc(var(--px) * 8);
+  /* room for the cursor, which is sized with the text (--tpx), not the scene */
+  padding: 0 calc(var(--px) * 2) 0 calc(var(--tpx, var(--px)) * 8);
   min-width: 24px;
   background: none; border: 0; border-radius: calc(var(--px) * 2);
   color: inherit; font: inherit; text-align: left; text-decoration: none; cursor: pointer;
@@ -297,4 +298,24 @@ html[data-time="night"] .lab-type--grass { color: #88D870; }
 }
 @media (prefers-reduced-motion: reduce) {
   .lost-compass img { animation: none !important; }
+}
+
+/* Type legend: what each capsule holds, under its type name. */
+.lab-type-name { display: flex; flex-direction: column; align-items: center; line-height: 1.5; }
+.lab-type-side { color: var(--bh-ink); opacity: 0.75; }
+
+/* Touch screens have no hover, so every menu item carries a dim cursor that says "tap me". */
+@media (hover: none) {
+  .bh-menu-item .bh-cursor { visibility: visible; opacity: 0.4; }
+  .bh-menu-item:active .bh-cursor, .bh-menu-item:focus .bh-cursor { opacity: 1; }
+  /* the type row already reads as three labelled choices */
+  .lab-menu--row .bh-cursor { visibility: hidden; }
+}
+
+/* Reading text never drops under 12px: on small phones the text box runs on --tpx, a text
+   pixel that is still a whole number of device pixels but larger than the scene's --px. */
+.bh-textbox {
+  width: min(100%, calc(var(--tpx, var(--px)) * 240));
+  font-size: calc(var(--tpx, var(--px)) * 8);
+  line-height: calc(var(--tpx, var(--px)) * 9);
 }

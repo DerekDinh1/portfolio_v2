@@ -12,7 +12,7 @@ import numpy as np
 
 from common import H, W, Canvas, Layer, Variant, grid, periodic_profile, sky_ramp, tile_noise
 from habitats import water as base
-from habitats.water import ROLES, Swell, _runs, conifer, lobe
+from habitats.water import ROLES, TREE, Swell, _runs, conifer, dome, lobe
 
 NAME = "grass"
 FIELD_Y = 58           # first meadow row
@@ -61,6 +61,11 @@ LADDER = ["wv"] + BANDS + ["dock_shadow"]      # sunlit to shaded
 FLOWERS = [(22, 70), (44, 92), (70, 66), (118, 74), (132, 96), (232, 70), (226, 99), (250, 84),
            (274, 67), (296, 95), (322, 72), (372, 80), (398, 64), (416, 92), (440, 74), (462, 98),
            (12, 100), (58, 80), (112, 62), (308, 62), (424, 104), (474, 66), (148, 66), (210, 88)]
+# Wildflower patches in the near meadow: loose groups, the way they grow in drifts.
+PATCHES = [(16, 90), (22, 95), (28, 89), (120, 99), (127, 95), (114, 96), (62, 86), (68, 91),
+           (230, 95), (236, 90), (262, 92), (268, 97), (257, 99), (310, 88), (316, 93), (305, 94),
+           (384, 96), (390, 91), (378, 99), (446, 90), (452, 95), (440, 97), (474, 88), (4, 96),
+           (200, 98), (207, 95), (150, 98), (158, 96)]
 # The trail winds from the near bank up to the tree line: (centre x, y). It widens with
 # perspective and carries on across the foreground bank.
 TRAILS = [[(98, 58), (95, 62), (88, 66), (85, 71), (90, 77), (99, 83), (103, 90), (97, 98), (84, 106), (68, 116), (52, 130), (40, 160)],
@@ -85,6 +90,42 @@ def trail_masks():
                     rut[y] |= (np.abs(off - side * half) < 0.6) & ((y + int(cx)) % 5 != 0)
                 worn[y] |= (np.abs(off) < half * 0.16) & ((y * 3 + int(cx)) % 4 != 0)
     return dirt, edge & dirt, rut & dirt, worn & dirt
+
+
+# Lone trees dotted over the meadow, smaller with distance, as on the title screen's hills.
+# Round trees: (x, ground y, r). Pines: (x, ground y, tiers top to bottom as (half width, height)).
+ROUNDS = [(34, 74, 4), (118, 66, 3), (233, 71, 3), (300, 75, 4), (420, 66, 3), (186, 62, 2), (372, 63, 2)]
+PINES_FAR = [(14, 67, [(2, 4), (3, 5)]), (56, 65, [(2, 4), (3, 5)]), (246, 64, [(1, 3), (2, 4)]),
+             (276, 69, [(2, 4), (3, 5), (4, 5)]), (330, 64, [(1, 3), (2, 4)]), (396, 73, [(2, 4), (3, 5), (4, 6)]),
+             (458, 68, [(2, 4), (3, 5)]), (140, 62, [(1, 3), (2, 4)])]
+
+
+def _trees(ground: Canvas):
+    """Draw the meadow trees into the ground canvas; returns the mask they cover."""
+    before = ground.a.copy()
+    for x, y, r in ROUNDS:
+        for dx in range(-r, r + 3):                     # contact shadow, thrown right
+            ground.put(x + dx + 1, y, "dock_shadow")
+            if abs(dx) < r:
+                ground.put(x + dx + 2, y + 1, "dock_shadow")
+        for yy in range(y - 2, y + 1):
+            ground.put(x, yy, "tr_lit")
+            ground.put(x + 1, yy, "tr_dk")
+        lobe(ground, x - r + 1, y - r - 1, r - 1 if r > 2 else r, TREE, under=False)
+        lobe(ground, x + r - 1, y - r - 1, r - 1 if r > 2 else r, TREE, under=False)
+        lobe(ground, x, y - 2 * r, r, TREE, under=False)
+        lobe(ground, x, y - r - 2, r, TREE)
+    for x, y, tiers in PINES_FAR:
+        hw = tiers[-1][0]
+        for dx in range(-hw + 1, hw + 3):
+            ground.put(x + dx + 1, y, "dock_shadow")
+        ground.put(x, y - 1, "tr_dk")
+        ground.put(x, y, "tr_dk")
+        yb = y - 1
+        for hw, th in reversed(tiers):                  # bottom tier first
+            dome(ground, x, yb, hw, th, TREE)
+            yb -= th - 2
+    return ground.a != before
 
 
 def _tufts():
@@ -131,7 +172,11 @@ def meadow() -> Canvas:
     ground.a[rut] = ROLES["d_sh"]
     ground.a[edge] = ROLES["d_sh"]
     ground.a[dirt & ~edge & (((xs * 7 + ys * 13) % 37) == 0)] = ROLES["d_dk"]      # scattered pebbles
-    tufts = [t for t in _tufts() if not dirt[min(H - 1, t[1]), t[0] % WIDE]]
+    trees = _trees(ground)
+    tufts = [t for t in _tufts() if not dirt[min(H - 1, t[1]), t[0] % WIDE]
+             and not trees[min(H - 1, t[1]), t[0] % WIDE] and not trees[max(0, t[1] - 2), t[0] % WIDE]]
+    blooms = [(x, y) for x, y in FLOWERS + PATCHES
+              if not dirt[y, x % WIDE] and not trees[y - 3:y + 1, (x - 1) % WIDE:(x + 2) % WIDE].any()]
 
     for f in range(FRAMES):
         oy = f * H
@@ -149,13 +194,24 @@ def meadow() -> Canvas:
                     if j == bh - 1 and lean == 2 and h >= 4:
                         role = "wv"                                          # pale underside flashing in a strong gust
                     c.put((bx + shift) % WIDE, y - j + oy, role)
-        for j, (x, y) in enumerate(FLOWERS):        # wildflowers bob with the same gusts
+        for j, (x, y) in enumerate(blooms):         # wildflowers bob with the same gusts
             g = gust(x, y, f)
             dx = 0 if g < 0.5 else -1
             c.put(x, y + oy, "dock_shadow")
-            c.put(x + dx, y - 1 + oy, "hl" if j % 2 else "spark2")
-            if g > 0.8:
-                c.put(x + dx - 1, y - 1 + oy, "wv")
+            if y < 78:                              # far off: a dot of colour on a stem
+                c.put(x + dx, y - 1 + oy, ("hl", "spark2", "fl")[j % 3])
+                if g > 0.8:
+                    c.put(x + dx - 1, y - 1 + oy, "wv")
+            elif j % 3 == 2:                        # near: an orange bloom with a lit petal
+                c.put(x, y - 1 + oy, "dock_shadow")
+                for ax, ay in ((0, -2), (1, -2), (0, -3), (1, -3)):
+                    c.put(x + dx + ax, y + ay + oy, "fl")
+                c.put(x + dx, y - 3 + oy, "spark2")
+            else:                                   # near: a daisy, four petals round a yellow eye
+                c.put(x, y - 1 + oy, "dock_shadow")
+                for ax, ay in ((-1, -3), (1, -3), (0, -2), (0, -4)):
+                    c.put(x + dx + ax, y + ay + oy, "hl")
+                c.put(x + dx, y - 3 + oy, "spark2")
     return c
 
 
@@ -167,6 +223,7 @@ PINES = [(8, [(3, 8), (5, 9), (7, 9), (9, 10)]), (24, [(3, 8), (5, 9), (7, 9)]),
          (262, [(3, 8), (5, 9)]), (278, [(3, 7), (4, 8)]), (446, [(3, 7), (5, 8)]), (460, [(3, 8), (5, 9), (7, 9), (9, 10)]),
          (474, [(3, 8), (5, 9), (7, 9)])]
 BOULDERS = [(118, 4), (125, 3), (202, 4), (332, 4), (339, 3), (410, 3)]
+BANK_BLOOMS = [56, 61, 104, 136, 142, 150, 168, 176, 190, 214, 300, 308, 318, 360, 366, 392, 428, 434]
 ROCK = ["pk_hi", "pk_lit", "pk_base", "pk_sh"]
 SIGN = ["KKKKKKKKKKKKK.",
         "KHHHHHHHHHHHKK",
@@ -209,6 +266,20 @@ def shore() -> Canvas:
         for i, ch in enumerate(row):
             if ch != ".":
                 c.put(66 + i, 93 + j, key[ch])
+    for j, x in enumerate(BANK_BLOOMS):           # wildflowers along the top of the bank
+        if dirt[int(prof[x]), x]:
+            continue
+        y = int(prof[x]) - 1
+        c.put(x, y + 1, "g_sh")
+        c.put(x, y, "g_sh")
+        if j % 3 == 2:
+            for ax, ay in ((0, -1), (1, -1), (0, -2), (1, -2)):
+                c.put(x + ax, y + ay, "fl")
+            c.put(x, y - 2, "spark2")
+        else:
+            for ax, ay in ((-1, -2), (1, -2), (0, -1), (0, -3)):
+                c.put(x + ax, y + ay, "hl")
+            c.put(x, y - 2, "spark2")
     for x, tiers in PINES:
         conifer(c, x, int(prof[x]) + 3, tiers)
     return c
@@ -227,6 +298,7 @@ def build(variant: str) -> Variant:
     if night:
         add("05-stars.png", base.stars(), frames=4, fps=3)
     add("10-clouds.png", base.clouds(), drift=-2)
+    add("12-cumulus.png", base.cumulus(base=52), drift=-1)
     add("20-peaks.png", base.peaks(ridgeline=RIDGE, snowline=27))
     add("25-ridge.png", base.ridge()[0])
     add("30-meadow.png", meadow(), frames=FRAMES, fps=2)

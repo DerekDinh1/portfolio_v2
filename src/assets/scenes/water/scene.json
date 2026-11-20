@@ -24,6 +24,11 @@
           "drift": -2
         },
         {
+          "file": "day/12-cumulus.png",
+          "w": 480,
+          "drift": -1
+        },
+        {
           "file": "day/15-horizon.png",
           "w": 480,
           "drift": 0
@@ -61,6 +66,11 @@
           "file": "night/10-clouds.png",
           "w": 480,
           "drift": -2
+        },
+        {
+          "file": "night/12-cumulus.png",
+          "w": 480,
+          "drift": -1
         },
         {
           "file": "night/15-horizon.png",

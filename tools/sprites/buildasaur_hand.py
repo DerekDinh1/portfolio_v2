@@ -13,6 +13,7 @@ import json
 import pathlib
 
 from PIL import Image
+from tone import grade_all
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "src/assets/sprites/buildasaur"
@@ -34,6 +35,7 @@ PALETTE = {
     "G": (184, 192, 208),   # wrench
     "g": (112, 120, 144),   # wrench shadow, buckle
 }
+PALETTE = grade_all(PALETTE)
 
 
 def rows(spec):
@@ -76,6 +78,12 @@ HEAD = rows("""
 31 22 KYYTTTTTYYYYoooKKKKK
 32 23 KKyYYYYYKKK
 33 25 KKKKKK
+""")
+# Freckles on the snout, as on the mascot.
+HEAD += rows("""
+19 24 o
+20 27 o
+22 25 o
 """)
 # Crest flicker: the inner flame tongues swap sides.
 CREST_B = rows("""
@@ -132,6 +140,11 @@ BODY = rows("""
 56 19 KYYKYYKRRRRK..KYYoYYoYYOOooK
 57 20 KK.KK.KKKK...KYYKYYKYYOoooK
 58 34 KK.KK.KKKKKK
+""")
+# Freckles on the near thigh.
+BODY += rows("""
+52 36 o
+54 38 o
 """)
 
 # Near arm and the wrench it holds.

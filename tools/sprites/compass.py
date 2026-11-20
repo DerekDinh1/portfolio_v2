@@ -7,6 +7,7 @@ import math
 import pathlib
 
 from PIL import Image
+from tone import grade_all
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "src/assets/sprites/lost"
@@ -15,6 +16,7 @@ S, FRAMES = 17, 16
 
 PAL = {"K": (24, 32, 48), "g": (232, 240, 248), "m": (168, 176, 200), "W": (248, 248, 240),
        "n": (88, 96, 128), "r": (216, 56, 48), "t": (120, 136, 168)}
+PAL = grade_all(PAL)
 
 TILE = [                      # frame and dial; the needle is drawn on top
     "..KKKKKKKKKKKKK..",

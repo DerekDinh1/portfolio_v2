@@ -15,6 +15,7 @@ import pathlib
 import re
 
 from PIL import Image
+from tone import grade_all
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "src/assets/sprites/resumon"
@@ -38,6 +39,7 @@ PALETTE = {
     "P": (248, 200, 176),   # blush
     "V": (56, 184, 72),     # check mark
 }
+PALETTE = grade_all(PALETTE)
 
 
 def rows(spec):
@@ -92,6 +94,11 @@ HEAD = rows("""
 23 9 11 K U T
 24 9 11 K T t
 25 9 10 K2
+""")
+# Wet gloss on the crown, as on the mascot: two specular flecks inside the highlight.
+HEAD += rows("""
+13 19 20 C2
+15 16 16 C
 """)
 # Both eyes share one construction: shine top-left, blue iris along the bottom. The far
 # (left) eye is the same height, narrower, and sits one pixel clear of the outline.

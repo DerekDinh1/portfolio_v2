@@ -155,7 +155,7 @@ export default function BattleHero({
             <div className="bh-info-row">
               <span className="bh-badge">{type}</span>
               {status ? (
-                <span className="bh-status">
+                <span className="bh-status" title={status.text}>
                   <span aria-hidden="true">{status.tag}</span>
                   <span className="bh-sr">{status.text}</span>
                 </span>

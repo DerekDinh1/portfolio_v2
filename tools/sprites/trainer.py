@@ -10,6 +10,7 @@ import json
 import pathlib
 
 from PIL import Image
+from tone import grade_all
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "src/assets/sprites/trainer"
@@ -33,6 +34,7 @@ PALETTE = {
     "b": (160, 64, 32, 255),    # backpack shadow
     "d": (16, 72, 88, 255),     # hoodie outline
 }
+PALETTE = grade_all(PALETTE)
 
 W, H, TOP = 16, 32, 10  # figure rows start at y=10 and end on y=31
 

@@ -27,6 +27,17 @@ def q15(c):
     return tuple(int(v) & 0xF8 for v in c)
 
 
+DEEPEN = 1.16
+
+
+def deepen(c, g=None):
+    """Grade a colour a little deeper: a per-channel gamma, so mid-tones darken and gain
+    saturation while white stays white and black stays black. Every scene colour passes
+    through this on the way out, which keeps the whole set in step with the title art."""
+    g = DEEPEN if g is None else g
+    return tuple(round(255 * (v / 255) ** g) for v in c)
+
+
 def mix(a, b, t):
     return tuple(a[i] + (b[i] - a[i]) * t for i in range(3))
 
@@ -79,7 +90,7 @@ class Canvas:
     def to_rgba(self, palette: dict[str, str]) -> np.ndarray:
         lut = np.zeros((256, 4), np.uint8)
         for name in self.roles.names:
-            lut[self.roles[name]] = (*q15(hex_rgb(palette[name])), 255)
+            lut[self.roles[name]] = (*q15(deepen(hex_rgb(palette[name]))), 255)
         return lut[self.a]
 
 

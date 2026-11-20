@@ -33,7 +33,7 @@ ROLES = RoleSet([
     "t_hi", "t_lit", "t_base", "t_dk", "tr_lit", "tr_dk",
     "d_hi", "d_lit", "d_sh", "d_dk",
     "sm0", "sm1", "sm2", "sm3", "sm4",
-    "moon", "moon_sh", "glow", "mp", "mp2", "star1", "star2",
+    "moon", "moon_sh", "glow", "mp", "mp2", "star1", "star2", "fl",
 ])
 
 DAY = dict(
@@ -51,7 +51,7 @@ DAY = dict(
     t_hi="#98E060", t_lit="#58C048", t_base="#34983C", t_dk="#1C6040", tr_lit="#A87050", tr_dk="#6C4048",
     d_hi="#E8C890", d_lit="#C09868", d_sh="#8C6860", d_dk="#503C48",
     moon="#F8F4D0", moon_sh="#C8C8E0", glow="#3C58A0", mp="#F8F4D0", mp2="#C8F0FC",
-    star1="#FFFFFF", star2="#C8F0FC",
+    star1="#FFFFFF", star2="#C8F0FC", fl="#F89830",
 )
 
 NIGHT = dict(
@@ -69,7 +69,7 @@ NIGHT = dict(
     t_hi="#60D0B0", t_lit="#349474", t_base="#206C5C", t_dk="#124444", tr_lit="#705C98", tr_dk="#3C3064",
     d_hi="#A098C8", d_lit="#706898", d_sh="#4C4478", d_dk="#2C2450",
     moon="#F8F4D0", moon_sh="#C8C8E0", glow="#3C58A0", mp="#F8F4D0", mp2="#B0F0F8",
-    star1="#F8F4D0", star2="#B0F0F8",
+    star1="#F8F4D0", star2="#B0F0F8", fl="#D09058",
 )
 PALETTES = {"day": sky_ramp(DAY), "night": sky_ramp(NIGHT)}
 
@@ -237,6 +237,35 @@ def clouds() -> Canvas:
         local = np.zeros_like(m)
         local[base - 12:base + 1, cx - 30:cx + 31] = True
         c.paint(m & ~below2 & local, "c_sh")
+    return c
+
+
+# Towering cumulus, like the bank that rises behind the hills on the title screen. Each tower
+# is three ranks of lobes (dx, centre y, r), drawn back to front: sunlit crowns, a mid rank
+# and a shaded skirt, so the billows shade one another instead of reading as flat discs.
+TOWERS = [
+    (74, [[(-8, 21, 9), (7, 25, 8), (-22, 29, 8), (20, 31, 6)],
+          [(-33, 38, 8), (-16, 36, 9), (1, 35, 10), (17, 38, 8), (31, 42, 7)],
+          [(-43, 47, 6), (-27, 46, 8), (-10, 46, 9), (8, 46, 9), (25, 47, 7), (39, 49, 5), (-52, 50, 4)]]),
+    (306, [[(-2, 30, 8), (11, 34, 6)],
+           [(-15, 38, 7), (0, 39, 8), (15, 41, 7)],
+           [(-27, 46, 6), (-12, 46, 8), (4, 47, 8), (19, 47, 6), (30, 50, 4)]]),
+    (420, [[(0, 41, 6)], [(-10, 45, 5), (9, 46, 5)], [(-19, 49, 4), (-4, 49, 6), (11, 50, 5), (21, 51, 3)]]),
+]
+RANKS = [["c_hi", "c_hi", "c_lit", "c_base"], ["c_hi", "c_lit", "c_lit", "c_base"], ["c_lit", "c_lit", "c_base", "c_sh"]]
+
+
+def cumulus(base=WATER_Y - 1) -> Canvas:
+    """A slow bank of tall cloud standing on the horizon (`base` = its flat bottom row)."""
+    c = cv(H, WIDE)
+    for cx, ranks in TOWERS:
+        for roles, lobes in zip(RANKS, ranks):
+            for dx, cy, r in lobes:
+                lobe(c, (cx + dx) % WIDE, cy, r, roles, under=False, clip_y=base)
+    m = c.a != 0
+    ys = grid(WIDE)[1]
+    c.paint(m & (ys >= base - 1), "c_sh")                       # flat, shaded foot
+    c.paint(m & (ys == base - 2) & checker(WIDE, parity=0), "c_sh")
     return c
 
 
@@ -856,6 +885,7 @@ def build(variant: str) -> Variant:
     if night:
         add("05-stars.png", stars(), frames=4, fps=3)
     add("10-clouds.png", clouds(), drift=-2)
+    add("12-cumulus.png", cumulus(), drift=-1)
     add("15-horizon.png", horizon_clouds())
     add("30-water.png", water(none, np.zeros((H, WIDE), bool)), frames=WATER_FRAMES, fps=3)
     if night:

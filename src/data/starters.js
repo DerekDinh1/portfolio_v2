@@ -20,7 +20,7 @@ export const STARTERS = [
         tag: "OPEN",
         text: "Open to senior IT, automation and AI ops roles",
       },
-      message: "RESUMON is on duty. Where to?",
+      message: "RESUMON is open to new roles. Where to?",
       greetMessage: "RESUMON waves its clipboard. Want the résumé?",
     },
   },

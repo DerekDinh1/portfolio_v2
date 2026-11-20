@@ -199,7 +199,7 @@ export function Contact({ variant }) {
         className="back-lab"
         onClick={(e) => {
           e.preventDefault();
-          navigate("/", { state: { screen: "title", t: Date.now() } });
+          navigate("/", { state: { screen: "select", t: Date.now() } });
         }}
       >
         ← Back to the lab
@@ -244,17 +244,6 @@ export function ExpRow({ job, delay, latest = false, preset }) {
   );
 }
 
-// Prefer an explicit bar % when the label is not a parseable number ("Agentic", "Channels").
-function statBarWidth(stat) {
-  if (typeof stat.bar === "number") return Math.min(100, Math.max(4, stat.bar));
-  const str = String(stat.n);
-  const num = parseFloat(str.replace(/[^0-9.]/g, ""));
-  if (!Number.isFinite(num)) return 50;
-  if (str.includes("%")) return Math.min(100, Math.max(4, num));
-  if (num < 100) return Math.min(100, Math.max(4, num * 10));
-  return 85;
-}
-
 export function StatBars({ stats = STATS, delay = 0 }) {
   const reduce = useReducedMotion();
   return (
@@ -265,15 +254,18 @@ export function StatBars({ stats = STATS, delay = 0 }) {
             <span className="stat-bar-n">{s.n}</span>
             <span className="stat-bar-l">{s.l}</span>
           </div>
-          <div className="stat-bar-track">
-            <motion.div
-              className="stat-bar-fill"
-              initial={reduce ? false : { width: "0%" }}
-              whileInView={{ width: `${statBarWidth(s)}%` }}
-              viewport={{ once: true, amount: 0.4 }}
-              transition={{ duration: reduce ? 0 : 0.7, delay: reduce ? 0 : i * 0.08, ease: EASE_OUT }}
-            />
-          </div>
+          {/* a meter only where the stat is a real proportion */}
+          {typeof s.bar === "number" ? (
+            <div className="stat-bar-track">
+              <motion.div
+                className="stat-bar-fill"
+                initial={reduce ? false : { width: "0%" }}
+                whileInView={{ width: `${Math.min(100, Math.max(4, s.bar))}%` }}
+                viewport={{ once: true, amount: 0.4 }}
+                transition={{ duration: reduce ? 0 : 0.7, delay: reduce ? 0 : i * 0.08, ease: EASE_OUT }}
+              />
+            </div>
+          ) : null}
         </Reveal>
       ))}
     </div>

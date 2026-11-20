@@ -22,7 +22,7 @@ SLOTS = (84, 120, 156)  # capsule centres on the table
 ROLES = RoleSet([
     "ceil", "wall_hi", "wall", "wall_lo", "wall_sh", "trim_hi", "trim", "trim_dk",
     "fl_a", "fl_b", "fl_line", "fl_sh", "rug_hi", "rug", "rug_dk",
-    "win", "sky_a", "sky_b", "cloud", "star",
+    "win", "sky_a", "sky_b", "cloud", "star", "mtn", "mtn_sh", "hill", "hill_dk",
     "shelf_hi", "shelf", "shelf_dk", "book1", "book2", "book3", "book4", "paper",
     "mach_hi", "mach", "mach_sh", "mach_dk", "screen", "glow", "led_on", "led_off",
     "leaf_hi", "leaf", "leaf_dk", "pot", "pot_dk",
@@ -34,7 +34,7 @@ DAY = dict(
     ceil="#8890A8", wall_hi="#F0F0E0", wall="#D8DCD0", wall_lo="#B8C0C0", wall_sh="#A0A8B0",
     trim_hi="#C89868", trim="#A07048", trim_dk="#684838",
     fl_a="#C8D8D8", fl_b="#B0C8D0", fl_line="#90A8B8", fl_sh="#8098A8", rug_hi="#F0A870", rug="#D87850", rug_dk="#A84840",
-    win="#F8F8F0", sky_a="#58A8F8", sky_b="#98D0F8", cloud="#FFFFFF", star="#98D0F8",
+    win="#F8F8F0", sky_a="#58A8F8", sky_b="#98D0F8", cloud="#FFFFFF", star="#98D0F8", mtn="#88A0E8", mtn_sh="#5060B8", hill="#78C848", hill_dk="#409838",
     shelf_hi="#C89868", shelf="#A07048", shelf_dk="#583828",
     book1="#D85048", book2="#3890D8", book3="#58A848", book4="#E8C048", paper="#F8F8E8",
     mach_hi="#E0E8F0", mach="#A8B8C8", mach_sh="#7888A0", mach_dk="#404860",
@@ -47,7 +47,7 @@ NIGHT = dict(
     ceil="#202848", wall_hi="#7880B0", wall="#5860A0", wall_lo="#484C88", wall_sh="#383870",
     trim_hi="#806088", trim="#584068", trim_dk="#302040",
     fl_a="#405088", fl_b="#384478", fl_line="#283060", fl_sh="#202850", rug_hi="#A86080", rug="#804868", rug_dk="#582C50",
-    win="#9098C8", sky_a="#080C30", sky_b="#182058", cloud="#182058", star="#F8F4D0",
+    win="#9098C8", sky_a="#080C30", sky_b="#182058", cloud="#182058", star="#F8F4D0", mtn="#34549C", mtn_sh="#24367C", hill="#246860", hill_dk="#103C48",
     shelf_hi="#806088", shelf="#584068", shelf_dk="#281830",
     book1="#904060", book2="#3058A8", book3="#307868", book4="#A89058", paper="#A8B0D8",
     mach_hi="#8898C8", mach="#5868A0", mach_sh="#404878", mach_dk="#181C40",
@@ -129,6 +129,14 @@ def room() -> Canvas:
             lobe(fr, cx, cy, r, ["cloud"] * 4, under=False, clip_y=16 if cy < 17 else 23)
         for x, y in ((104, 10), (123, 9), (136, 12), (128, 19), (107, 21), (117, 23)):
             fr.put(x, y, "star")
+        # the view outside: the meadow and the range from the title screen
+        for x in range(101, 139):
+            top = 18 + abs(x - 112) // 2 if x < 124 else 21 + abs(x - 131) // 2 - (x > 131)
+            for y in range(max(17, top), 26):
+                fr.put(x, y, "mtn" if (x < 112 or 124 <= x < 131) else "mtn_sh")
+            hill = 23 - (1 if 104 <= x <= 116 else 0) + (1 if x >= 128 else 0) - (1 if 132 <= x <= 137 else 0)
+            for y in range(hill, 26):
+                fr.put(x, y, "hill" if y == hill else "hill_dk")
         fr.rect(119, 7, 2, 19, "win")
         fr.hline(100, 139, 16, "win")
         fr.hline(98, 141, 27, "trim_hi")

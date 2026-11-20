@@ -1,15 +1,19 @@
 /* ==================================================================
    Derek Dinh: a Game Boy Advance era creature-collecting game, in CSS.
-   One system, one typeface (Silkscreen), one panel language shared with
+   One system, Silkscreen for everything except sentences (VT323, a pixel
+   face with lower case and clear digits), one panel language shared with
    the battle hero in game/game.css: cream fill, 1px inner line, 2px dark
    frame, 1px drop edge. Only the type-theme accent changes per page.
    ================================================================== */
 
 :root {
-  /* typeface: Silkscreen everywhere (400 and 700 only) */
+  /* typeface: Silkscreen (400 and 700 only); long-form copy uses --read below */
   --pixel: "Silkscreen", "Courier New", monospace;
   --display: var(--pixel);
   --body: var(--pixel);
+  /* reading face: still a pixel font, but with lower case, for sentences and bullet points */
+  --read: "VT323", var(--pixel);
+  --fs-read: 20px;
 
   /* type scale (px, so pixel glyphs land on whole screen pixels) */
   --fs-label: 12px;
@@ -670,6 +674,16 @@ html[data-time="night"] .nameplate { border-color: var(--p-line); }
   color: #f2f7ff;
   text-shadow: 0 4px 0 rgba(4, 9, 24, 0.7);
 }
+.title-role {
+  font-family: var(--pixel);
+  font-size: var(--fs-label);
+  letter-spacing: 0.08em;
+  line-height: 1.6;
+  color: #fff;
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.6);
+  margin-top: var(--s3);
+}
+.title-screen.is-night .title-role { color: #dbe8fb; text-shadow: 0 2px 0 rgba(4, 9, 24, 0.75); }
 .title-actions {
   display: flex;
   flex-direction: column;
@@ -778,7 +792,8 @@ html[data-time="night"] .nameplate { border-color: var(--p-line); }
 }
 
 /* stat bars: the hero's HP bar, one per stat */
-.stat-bars { display: grid; gap: var(--s5); padding: 0; max-width: 44rem; }
+.stat-bars { display: grid; gap: var(--s4); padding: 0; max-width: 44rem; }
+.stat-bar-row + .stat-bar-row { padding-top: var(--s4); border-top: 2px dashed var(--line); }
 .stat-bar-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--s1) var(--s4); margin-bottom: var(--s2); }
 .stat-bar-n { font-weight: 700; font-size: var(--fs-lead); color: var(--accent-ink); }
 html:not([data-time="night"]) .stat-bar-n { color: var(--accent-text); }
@@ -810,7 +825,7 @@ html:not([data-time="night"]) .stat-bar-n { color: var(--accent-text); }
 .exp-head { display: flex; justify-content: space-between; align-items: baseline; gap: var(--s2) var(--s4); flex-wrap: wrap; }
 .exp-when { font-size: var(--fs-label); letter-spacing: 0.04em; color: var(--accent-text); white-space: nowrap; }
 .exp-org { font-weight: 700; font-size: var(--fs-lead); line-height: 1.6; display: flex; align-items: center; flex-wrap: wrap; gap: var(--s2) var(--s3); }
-.exp-role { color: var(--muted); font-size: var(--fs-label); line-height: 1.8; }
+.exp-role { color: var(--ink); font-size: var(--fs-body); line-height: 1.8; }
 .exp-latest {
   font-size: var(--fs-label); font-weight: 700; letter-spacing: 0.08em; line-height: 1.3;
   padding: 3px 10px;
@@ -1110,3 +1125,30 @@ html[data-time="night"] .chip-ai { background: rgba(232, 196, 90, 0.16); color: 
   .btn:active, .title-press:active, .app-carousel-nav:active { transform: none; }
   .app-carousel-nav:active { transform: translateY(-50%); }
 }
+
+/* Long-form copy is set in the reading face: mixed case reads far faster than all caps.
+   Headings, labels, buttons and all game UI stay in Silkscreen. */
+.career-throughline p:not(.career-tagline),
+.exp-points li,
+.exp-role,
+.notable li,
+.block-sub,
+.proj-what,
+.proj-problem,
+.proj-outcome,
+.app-carousel-what,
+.fun-intro,
+.rec-item-blurb,
+.stat-bar-l,
+.edu-degree,
+.edu-minors,
+.contact p,
+.select-sub,
+.dialogue-text {
+  font-family: var(--read);
+  font-size: var(--fs-read);
+  line-height: 1.35;
+  letter-spacing: 0.01em;
+}
+.stat-bar-l, .rec-item-blurb, .exp-role, .edu-minors { font-size: 19px; }
+.dialogue-text { font-size: 22px; }

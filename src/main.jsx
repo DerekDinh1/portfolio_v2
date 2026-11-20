@@ -275,6 +275,7 @@ function TitleScreen({ onStart, onSkipIntro }) {
       <div className="title-inner">
         <p className="title-region">Colorado Region</p>
         <h1 className="title-name">DEREK DINH</h1>
+        <p className="title-role">IT Operations · Automation · AI</p>
         <div className="title-actions">
           <button className="title-press btn-pop" onClick={onStart}>
             Press Start
@@ -406,16 +407,18 @@ function IntroDialogue({ step, setStep, onChoose }) {
 }
 
 function Home() {
-  const [scene, setScene] = useState("title");
+  const location = useLocation();
+  // "Back to the lab" links ask for the lab itself; everything else opens on the title screen.
+  const wanted = location.state?.screen === "select" ? "select" : "title";
+  const [scene, setScene] = useState(wanted);
   const [step, setStep] = useState(0);
   const reduce = useReducedMotion();
-  const location = useLocation();
 
   useEffect(() => {
     if (location.pathname !== "/") return;
-    setScene("title");
+    setScene(wanted);
     setStep(0);
-  }, [location.pathname, location.state?.t]);
+  }, [location.pathname, location.state?.t, wanted]);
 
   return (
     <main className="home">

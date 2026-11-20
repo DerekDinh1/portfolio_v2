@@ -7,6 +7,7 @@ closed, lid nudged left, lid nudged right and lifting, open. Only the lid moves,
 import pathlib
 
 from PIL import Image
+from tone import grade, grade_all
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "src/assets/sprites/capsules"
@@ -20,6 +21,9 @@ TYPES = {
     "fire": dict(a=(248, 200, 120), A=(232, 104, 48), b=(168, 56, 32), emblem=["..e.", ".ee.", "eeee", "eeee"]),   # flame
     "grass": dict(a=(176, 232, 136), A=(88, 168, 72), b=(48, 112, 64), emblem=["..ee", ".eee", "eee.", "e..."]),   # leaf
 }
+
+METAL = grade_all(METAL)
+TYPES = {k: {n: (grade(v) if isinstance(v, tuple) else v) for n, v in t.items()} for k, t in TYPES.items()}
 
 LID = [                      # the metal cap, four rows above the seam
     ".....KKKKKK.....",

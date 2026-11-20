@@ -22,7 +22,12 @@ export default function usePixelScale() {
     if (!el) return undefined;
 
     const apply = () => {
-      el.style.setProperty("--px", `${computePixelScale(el.clientWidth)}px`);
+      const px = computePixelScale(el.clientWidth);
+      const dpr = window.devicePixelRatio || 1;
+      // Text pixel: the scene scale, or the smallest device-pixel step that keeps 8px glyphs at 12px.
+      const tpx = Math.max(px, Math.ceil(1.5 * dpr) / dpr);
+      el.style.setProperty("--px", `${px}px`);
+      el.style.setProperty("--tpx", `${tpx}px`);
     };
     apply();
 

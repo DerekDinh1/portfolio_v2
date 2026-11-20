@@ -13,6 +13,7 @@ import json
 import pathlib
 
 from PIL import Image
+from tone import grade_all
 
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 OUT = ROOT / "src/assets/sprites/vibeon"
@@ -37,6 +38,7 @@ PALETTE = {
     "h": (112, 112, 144),   # headphone rim
     "Y": (176, 216, 72),    # pendant, putting green
 }
+PALETTE = grade_all(PALETTE)
 
 
 def rows(spec):
@@ -129,6 +131,13 @@ BODY = rows("""
 57 13 K D5 K .2 K D K D K D K .2 K D K D K D K .2 K D d5 D K
 58 14 K5 .4 K5 .4 K5 .4 K D5 K
 59 42 K5
+""")
+# Chest fluff: two short fur ticks in the cream bib.
+BODY += rows("""
+44 26 c
+45 27 c
+44 31 c
+45 32 c
 """)
 
 TAIL = rows("""

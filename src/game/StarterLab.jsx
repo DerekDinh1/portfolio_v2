@@ -25,6 +25,8 @@ const WOBBLE = [1, 0, 2, 0, 1, 0, 2]; // capsule strip frames before it opens
 const WOBBLE_MS = 90 * SLOW;
 const POP_MS = 600 * SLOW;
 const BLUR_MS = 350 * SLOW;
+// What each type stands for, shown under its name so nobody has to guess.
+const SIDES = { professional: "CAREER", projects: "PROJECTS", personal: "PERSONAL" };
 const INTRO = "Three capsules rest on the table. One for each side of my work.";
 const ASK = "Which one will you open?";
 const INTRO_HOLD_MS = 1100 * SLOW; // pause on the finished intro before the question
@@ -260,10 +262,13 @@ export default function StarterLab() {
                   className={`bh-menu-item lab-type lab-type--${s.theme}`}
                   onClick={() => choose(i)}
                   disabled={busy}
-                  aria-label={`Open the ${s.type} capsule`}
+                  aria-label={`Open the ${s.type} capsule: ${SIDES[s.slug].toLowerCase()}`}
                 >
                   <span className="bh-cursor" aria-hidden="true">▶</span>
-                  {s.type.toUpperCase()}
+                  <span className="lab-type-name">
+                    {s.type.toUpperCase()}
+                    <span className="lab-type-side" aria-hidden="true">{SIDES[s.slug]}</span>
+                  </span>
                 </button>
               ))
             )}

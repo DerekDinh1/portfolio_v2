@@ -17,6 +17,8 @@ Original art in the style of a 2004 handheld monster RPG (the user's reference i
 - Sprites: at most 24 colours plus transparent. A scene variant (all its layers): at most 64 colours.
 - PNG only, no JPEG. Files are small; do not add compression tooling.
 
+- Grade: every palette is authored slightly bright and deepened on export, so the pixel art sits with the title backgrounds. Scenes use `DEEPEN` in `tools/scenes/common.py`; sprites use the lighter `GRADE` in `tools/sprites/tone.py`. To make everything lighter or darker, change those two numbers and rebuild.
+
 ## Display rules (runtime)
 
 - Scale is an integer number of **device** pixels per art pixel: `scale = floor(cssWidth * devicePixelRatio / 240) / devicePixelRatio`, capped so the scene is at most 62vh tall. Always `image-rendering: pixelated`.
@@ -115,7 +117,8 @@ Borrow the conventions of GBA-era monster-RPG landscapes; do not copy or trace a
 
 ## Game UI
 
-- Font: `var(--pixel)` (Silkscreen, already loaded). Text sits on the art-pixel grid.
+- Font: `var(--pixel)` (Silkscreen, already loaded). Text sits on the art-pixel grid. Sentences and bullet points on the pages below the hero use `var(--read)` (VT323), never the game UI.
+- Text-box text uses `--tpx`, never under 12px: on small phones it is a larger whole-device-pixel step than the scene's `--px`.
 - Panels are our own design: cream fill `#F8F8E8`, 1px inner line `#B8B8A0`, 2px outer frame `#404858`, 1px drop edge. Night uses `#283048` fill with `#98A8C8` lines.
 - Type colours: water `#3890D8`, fire `#E86830`, grass `#58A848`.
 - Starter select (later phase) uses three original typed capsules, one per starter in its type colour. Not a red-and-white ball, and not called a Poké Ball.
