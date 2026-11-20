@@ -1,1 +1,0 @@
-var e=`/assets/water-night-C71mD75r.jpg`;export{e as default};

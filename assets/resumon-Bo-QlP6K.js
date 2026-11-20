@@ -1,1 +1,0 @@
-var e=`/assets/resumon-QgcNHuYR.webp`;export{e as default};

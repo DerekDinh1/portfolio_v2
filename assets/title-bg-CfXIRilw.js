@@ -1,1 +1,0 @@
-var e=`/assets/title-bg-DNedJ8tJ.jpg`;export{e as default};

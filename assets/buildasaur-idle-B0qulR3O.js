@@ -1,1 +1,0 @@
-var e=`/assets/buildasaur-idle-DJr-GR6Q.webp`;export{e as default};

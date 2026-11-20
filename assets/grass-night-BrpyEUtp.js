@@ -1,1 +1,0 @@
-var e=`/assets/grass-night-DXCAGM4q.jpg`;export{e as default};
